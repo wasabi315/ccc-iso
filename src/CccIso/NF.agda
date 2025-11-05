@@ -52,6 +52,23 @@ data NF n where
 
   trunc : isGroupoid (NF n)
 
+-- Smart constructors
+
+record _⊂_ (X Y : ℕ → Type) : Type where
+  field ↑_ : X n → Y n
+
+open _⊂_ ⦃ ... ⦄ public
+
+instance
+  Atom⊂Factor : Atom ⊂ Factor
+  Atom⊂Factor .↑_ = ⊤ ⇒ᵃ_
+
+  Factor⊂NF : Factor ⊂ NF
+  Factor⊂NF .↑_ = _*ᶠ ⊤
+
+  Atom⊂NF : Atom ⊂ NF
+  Atom⊂NF .↑_ α = (⊤ ⇒ᵃ α) *ᶠ ⊤
+
 --------------------------------------------------------------------------------
 
 {-
