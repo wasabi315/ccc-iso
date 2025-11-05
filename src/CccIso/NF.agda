@@ -38,11 +38,6 @@ data NF n where
   -- swap is involutive
   invol : ∀ φ ψ ν → swap φ ψ ν ≡ sym (swap ψ φ ν)
 
-  -- identify two different paths from ε * φ * ψ * ν to ψ * φ * ε * ν
-  hexagon : ∀ ε φ ψ ν →
-      (swap ε φ (ψ *ᶠ ν) ∙∙ cong (φ *ᶠ_) (swap ε ψ ν) ∙∙ swap φ ψ (ε *ᶠ ν))
-    ≡ (cong (ε *ᶠ_) (swap φ ψ ν) ∙∙ swap ε ψ (φ *ᶠ ν) ∙∙ cong (ψ *ᶠ_) (swap ε φ ν))
-
   -- independent swaps commute
   square : ∀ ε φ ψ γ ν →
     Square
@@ -51,6 +46,13 @@ data NF n where
       (cong (λ μ → ε *ᶠ φ *ᶠ μ) (swap ψ γ ν))
       (cong (λ μ → φ *ᶠ ε *ᶠ μ) (swap ψ γ ν))
 
+  -- identify the two different paths from ε * φ * ψ * ν to ψ * φ * ε * ν
+  hexagon : ∀ ε φ ψ ν →
+    Path (ε *ᶠ φ *ᶠ ψ *ᶠ ν ≡ ψ *ᶠ φ *ᶠ ε *ᶠ ν)
+      (swap ε φ (ψ *ᶠ ν) ∙∙ cong (φ *ᶠ_) (swap ε ψ ν) ∙∙ swap φ ψ (ε *ᶠ ν))
+      (cong (ε *ᶠ_) (swap φ ψ ν) ∙∙ swap ε ψ (φ *ᶠ ν) ∙∙ cong (ψ *ᶠ_) (swap ε φ ν))
+
+  -- only groupoid truncate to allow interpretation into hSet
   trunc : isGroupoid (NF n)
 
 -- Smart constructors
@@ -69,8 +71,6 @@ instance
 
   Atom⊂NF : Atom ⊂ NF
   Atom⊂NF .↑_ α = (⊤ ⇒ᵃ α) *ᶠ ⊤
-
---------------------------------------------------------------------------------
 
 {-
         φ ψ ν ================= φ ψ ν
@@ -106,14 +106,20 @@ square' ε φ ψ γ ν = Square→compPath (square ε φ ψ γ ν)
 --------------------------------------------------------------------------------
 -- Product and exponential for NF
 
--- concatenate
 _*_ : NF n → NF n → NF n
 ⊤ * μ = μ
 (φ *ᶠ ν) * μ = φ *ᶠ (ν * μ)
 swap φ ψ ν i * μ = swap φ ψ (ν * μ) i
 invol φ ψ ν i j * μ = invol φ ψ (ν * μ) i j
-hexagon ε φ ψ ν i j * μ = {!   !}
 square ε φ ψ γ ν i j * μ = square ε φ ψ γ (ν * μ) i j
+hexagon ε φ ψ ν i j * μ =
+  hcomp
+    (λ where
+      k (i = i0) → {!   !}
+      k (i = i1) → {!   !}
+      k (j = i0) → ε *ᶠ φ *ᶠ ψ *ᶠ ν * μ
+      k (j = i1) → ψ *ᶠ φ *ᶠ ε *ᶠ ν * μ)
+    (hexagon ε φ ψ (ν * μ) i j)
 trunc ν ι p q P Q i j k * μ =
   trunc
     (ν * μ) (ι * μ)
@@ -131,9 +137,16 @@ _⇒_ : NF n → NF n → NF n
 ν ⇒ (φ *ᶠ μ) = (ν ⇒ᶠ φ) *ᶠ (ν ⇒ μ)
 ν ⇒ swap φ ψ μ i = swap (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ μ) i
 ν ⇒ invol φ ψ μ i j = invol (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ μ) i j
-ν ⇒ hexagon ε φ ψ μ i j = {!   !}
 ν ⇒ square ε φ ψ γ μ i j =
   square (ν ⇒ᶠ ε) (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ᶠ γ) (ν ⇒ μ) i j
+ν ⇒ hexagon ε φ ψ μ i j =
+  hcomp
+    (λ where
+      k (i = i0) → {!   !}
+      k (i = i1) → {!   !}
+      k (j = i0) → (ν ⇒ᶠ ε) *ᶠ (ν ⇒ᶠ φ) *ᶠ (ν ⇒ᶠ ψ) *ᶠ (ν ⇒ μ)
+      k (j = i1) → (ν ⇒ᶠ ψ) *ᶠ (ν ⇒ᶠ φ) *ᶠ (ν ⇒ᶠ ε) *ᶠ (ν ⇒ μ))
+    (hexagon (ν ⇒ᶠ ε) (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ μ) i j)
 ν ⇒ trunc μ ι p q P Q i j k =
   trunc
     (ν ⇒ μ) (ν ⇒ ι)

@@ -30,4 +30,5 @@ data Ty (n : ℕ) : Type where
 
   -- TODO: add coherence laws
 
+  -- only groupoid truncate to allow interpretation into hSet
   trunc : isGroupoid (Ty n)
