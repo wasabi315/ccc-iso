@@ -25,22 +25,23 @@ data Atom n where
 data Factor n where
   _⇒ᵃ_ : (ν : NF n) (α : Atom n) → Factor n
 
+-- Bag of factors
 data NF n where
   ⊤    : NF n
   _*ᶠ_ : (φ : Factor n) (ν : NF n) → NF n
 
   swap : ∀ φ ψ ν → φ *ᶠ ψ *ᶠ ν ≡ ψ *ᶠ φ *ᶠ ν
 
+  -- Avoiding as possible path concatenation in the type of the
+  -- coherence laws, but no way to avoid it for hexagon.
+
   -- swap is involutive
   invol : ∀ φ ψ ν → swap φ ψ ν ≡ sym (swap ψ φ ν)
 
   -- identify two different paths from ε * φ * ψ * ν to ψ * φ * ε * ν
   hexagon : ∀ ε φ ψ ν →
-    Square
-      (swap ε φ (ψ *ᶠ ν) ∙ cong (φ *ᶠ_) (swap ε ψ ν)) -- ε φ ψ ν ≡ φ ε ψ ν ≡ φ ψ ε ν
-      (swap ε ψ (φ *ᶠ ν) ∙ cong (ψ *ᶠ_) (swap ε φ ν)) -- ε ψ φ ν ≡ ψ ε φ ν ≡ ψ φ ε ν
-      (cong (ε *ᶠ_) (swap φ ψ ν)) -- ε φ ψ ν ≡ ε ψ φ ν
-      (swap φ ψ (ε *ᶠ ν)) -- φ ψ ε ν ≡ ψ φ ε ν
+      (swap ε φ (ψ *ᶠ ν) ∙∙ cong (φ *ᶠ_) (swap ε ψ ν) ∙∙ swap φ ψ (ε *ᶠ ν))
+    ≡ (cong (ε *ᶠ_) (swap φ ψ ν) ∙∙ swap ε ψ (φ *ᶠ ν) ∙∙ cong (ψ *ᶠ_) (swap ε φ ν))
 
   -- independent swaps commute
   square : ∀ ε φ ψ γ ν →
