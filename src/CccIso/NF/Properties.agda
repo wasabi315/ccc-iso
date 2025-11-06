@@ -2,7 +2,7 @@ module CccIso.NF.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
-  using (isOfHLevel→isOfHLevelDep; isSet→isGroupoid; isSet→SquareP)
+  using (isOfHLevel→isOfHLevelDep; isSet→isGroupoid; isSet→SquareP; isSetΠ2)
 open import Cubical.Data.Fin.Recursive.Base using (Fin)
 open import Cubical.Data.Nat.Base using (ℕ)
 
@@ -80,6 +80,7 @@ module ElimSetNF {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ ν → isSet (B �
       (trunc ν μ p q P Q)
       i j k
 
+
 module ElimPropNF {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ ν → isProp (B ν))
   (⊤* : B ⊤)
   (_**_ : ∀ φ {ν} (ν* : B ν) → B (φ *ᶠ ν))
@@ -92,3 +93,24 @@ module ElimPropNF {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ ν → isProp (B
         (λ i → trunc* (swap φ ψ ν i))
         (φ ** (ψ ** ν*))
         (ψ ** (φ ** ν*)))
+
+--------------------------------------------------------------------------------
+
+*-identityˡ : (ν : NF n) → ⊤ * ν ≡ ν
+*-identityˡ _ = refl
+
+*-identityʳ : (ν : NF n) → ν * ⊤ ≡ ν
+*-identityʳ =
+  ElimSetNF.f
+    (λ ν → trunc (ν * ⊤) ν)
+    refl
+    (λ φ → cong (φ *ᶠ_))
+    (λ φ ψ ih j i → swap φ ψ (ih i) j)
+
+*-assoc : (ν μ ι : NF n) → (ν * μ) * ι ≡ ν * (μ * ι)
+*-assoc =
+  ElimSetNF.f
+    (λ ν → isSetΠ2 λ μ ι → trunc ((ν * μ) * ι) (ν * (μ * ι)))
+    (λ _ _ → refl)
+    (λ φ ih μ ι → cong (φ *ᶠ_) (ih μ ι))
+    (λ φ ψ ih j μ ι i → swap φ ψ (ih μ ι i) j)

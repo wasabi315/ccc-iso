@@ -20,13 +20,13 @@ data Ty (n : ℕ) : Type where
   _⇒_ : (A B : Ty n) → Ty n
   [_] : (A : Ty n) → Ty n
 
-  *-comm  : ∀ A B → A * B ≡ B * A
-  *-assoc : ∀ A B C → (A * B) * C ≡ A * (B * C)
-  ⇒-curry : ∀ A B C → A ⇒ (B ⇒ C) ≡ (A * B) ⇒ C
-  ⇒-dist  : ∀ A B C → A ⇒ (B * C) ≡ (A ⇒ B) * (A ⇒ C)
-  *-idl   : ∀ A → ⊤ * A ≡ A
-  ⇒-idl   : ∀ A → ⊤ ⇒ A ≡ A
-  ⇒-zeror : ∀ A → A ⇒ ⊤ ≡ ⊤
+  *-comm      : ∀ A B → A * B ≡ B * A
+  *-assoc     : ∀ A B C → (A * B) * C ≡ A * (B * C)
+  ⇒-curry     : ∀ A B C → A ⇒ (B ⇒ C) ≡ (A * B) ⇒ C
+  ⇒-distribˡ  : ∀ A B C → A ⇒ (B * C) ≡ (A ⇒ B) * (A ⇒ C)
+  *-identityˡ : ∀ A → ⊤ * A ≡ A
+  ⇒-identityˡ : ∀ A → ⊤ ⇒ A ≡ A
+  ⇒-annihilʳ  : ∀ A → A ⇒ ⊤ ≡ ⊤
 
   -- TODO: add coherence laws
 
