@@ -48,8 +48,8 @@ module ElimSetNF {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ ν → isSet (B �
   f (invol φ ψ ν i j) =
     isSet→SquareP (λ i j → trunc* (invol φ ψ ν i j))
       (swap* φ ψ (f ν))
-      (symP (swap* ψ φ (f ν)))
       refl
+      (symP (swap* ψ φ (f ν)))
       refl
       i j
   f (square ε φ ψ γ ν i j) =

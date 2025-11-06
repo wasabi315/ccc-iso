@@ -37,7 +37,12 @@ data NF n where
   -- coherence laws, but no way to avoid it for hexagon.
 
   -- swap is involutive
-  invol : ∀ φ ψ ν → swap φ ψ ν ≡ sym (swap ψ φ ν)
+  invol : ∀ φ ψ ν →
+    Square
+      (swap φ ψ ν)
+      refl
+      (sym (swap ψ φ ν))
+      refl
 
   -- independent swaps commute
   square : ∀ ε φ ψ γ ν →
@@ -54,7 +59,7 @@ data NF n where
       (cong (ε *ᶠ_) (swap φ ψ ν) ∙∙ swap ε ψ (φ *ᶠ ν) ∙∙ cong (ψ *ᶠ_) (swap ε φ ν))
 
   -- only groupoid truncate to allow interpretation into hSet
-  trunc : isGroupoid (NF n)
+  trunc : ∀ ν μ (p q : ν ≡ μ) (P Q : p ≡ q) → P ≡ Q
 
 -- Smart constructors
 
@@ -73,30 +78,30 @@ instance
   Atom⊂NF : Atom ⊂ NF
   Atom⊂NF .↑_ α = (⊤ ⇒ᵃ α) *ᶠ ⊤
 
-{-
-        φ ψ ν ================= φ ψ ν
-        //∥                     // |
-       // ∥                    //  |
-      //  ∥                   //   |
-    φ ψ ν ----------------> φ ψ ν  | swap ψ φ ν k
-     (swap φ ψ ν ∙ swap ψ φ ν) i   |
-     ∥    ∥                   |    |
-     ∥    ∥   swap ψ φ ν (~i) |    |
-     ∥  φ ψ ν ----------------| ψ φ ν
-     ∥   //      swap ψ φ ν k |  //             k
-     ∥  //                    | //              ^ j
-     ∥ //                     |//               |/
-    φ ψ ν ----------------> ψ φ ν               ∙-----> i
-           swap φ ψ ν i
--}
+--
+--          φ ψ ν ================== φ ψ ν
+--          //|                      //|
+--         // | swap ψ φ            // |
+--        //  |                    //  |
+--      φ ψ ν ------------------ φ ψ ν |
+--       ∥   swap φ ψ ∙ swap ψ φ   |   | swap ψ φ
+--       ∥    |                    |   |
+--       ∥    |                    |   |
+--       ∥  ψ φ ν =================| ψ φ ν
+--       ∥   /            swap ψ φ |  //             k
+--       ∥  / swap ψ φ ⁻¹          | //              ^ j
+--       ∥ /                       |//               |/
+--      φ ψ ν ------------------ ψ φ ν               ∙-----> i
+--                swap φ ψ
+--
 invol' : (φ ψ : Factor n) (ν : NF n) → swap φ ψ ν ∙ swap ψ φ ν ≡ refl
 invol' φ ψ ν j i =
   hcomp
     (λ where
-      k (i = i0) → φ *ᶠ ψ *ᶠ ν
+      k (i = i0) → swap ψ φ ν (~ j ∨ k)
       k (i = i1) → swap ψ φ ν k
       k (j = i0) → compPath-filler (swap φ ψ ν) (swap ψ φ ν) k i
-      k (j = i1) → swap ψ φ ν (~ i ∨ k))
+      k (j = i1) → swap ψ φ ν k)
     (invol φ ψ ν j i)
 
 square' : (ε φ ψ γ : Factor n) (ν : NF n) →
