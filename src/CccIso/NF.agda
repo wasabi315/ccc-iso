@@ -104,6 +104,16 @@ invol' φ ψ ν j i =
       k (j = i1) → swap ψ φ ν k)
     (invol φ ψ ν j i)
 
+invol'' : (φ ψ : Factor n) (ν : NF n) → swap φ ψ ν ≡ sym (swap ψ φ ν)
+invol'' φ ψ ν j i =
+  hcomp
+    (λ where
+      k (i = i0) → swap ψ φ ν (~ j ∨ k)
+      k (i = i1) → ψ *ᶠ φ *ᶠ ν
+      k (j = i0) → swap φ ψ ν i
+      k (j = i1) → swap ψ φ ν (~ i ∧ k))
+    (invol φ ψ ν j i)
+
 square' : (ε φ ψ γ : Factor n) (ν : NF n) →
     cong (λ μ → ε *ᶠ φ *ᶠ μ) (swap ψ γ ν) ∙ swap ε φ (γ *ᶠ ψ *ᶠ ν)
   ≡ swap ε φ (ψ *ᶠ γ *ᶠ ν) ∙ cong (λ μ → φ *ᶠ ε *ᶠ μ) (swap ψ γ ν)
