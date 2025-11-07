@@ -33,9 +33,6 @@ data NF n where
 
   swap : ∀ φ ψ ν → φ *ᶠ ψ *ᶠ ν ≡ ψ *ᶠ φ *ᶠ ν
 
-  -- Avoiding as possible path concatenation in the type of the
-  -- coherence laws, but no way to avoid it for hexagon.
-
   -- swap is involutive
   invol : ∀ φ ψ ν →
     Square
@@ -43,14 +40,6 @@ data NF n where
       refl
       (sym (swap ψ φ ν))
       refl
-
-  -- independent swaps commute
-  square : ∀ ε φ ψ γ ν →
-    Square
-      (swap ε φ (ψ *ᶠ γ *ᶠ ν))
-      (swap ε φ (γ *ᶠ ψ *ᶠ ν))
-      (cong (λ μ → ε *ᶠ φ *ᶠ μ) (swap ψ γ ν))
-      (cong (λ μ → φ *ᶠ ε *ᶠ μ) (swap ψ γ ν))
 
   -- identify the two different paths from ε * φ * ψ * ν to ψ * φ * ε * ν
   hexagon : ∀ ε φ ψ ν →
@@ -78,47 +67,6 @@ instance
   Atom⊂NF : Atom ⊂ NF
   Atom⊂NF .↑_ α = (⊤ ⇒ᵃ α) *ᶠ ⊤
 
---
---          φ ψ ν ================== φ ψ ν
---          //|                      //|
---         // | swap ψ φ            // |
---        //  |                    //  |
---      φ ψ ν ------------------ φ ψ ν |
---       ∥   swap φ ψ ∙ swap ψ φ   |   | swap ψ φ
---       ∥    |                    |   |
---       ∥    |                    |   |
---       ∥  ψ φ ν =================| ψ φ ν
---       ∥   /            swap ψ φ |  //             k
---       ∥  / swap ψ φ ⁻¹          | //              ^ j
---       ∥ /                       |//               |/
---      φ ψ ν ------------------ ψ φ ν               ∙-----> i
---                swap φ ψ
---
-invol' : (φ ψ : Factor n) (ν : NF n) → swap φ ψ ν ∙ swap ψ φ ν ≡ refl
-invol' φ ψ ν j i =
-  hcomp
-    (λ where
-      k (i = i0) → swap ψ φ ν (~ j ∨ k)
-      k (i = i1) → swap ψ φ ν k
-      k (j = i0) → compPath-filler (swap φ ψ ν) (swap ψ φ ν) k i
-      k (j = i1) → swap ψ φ ν k)
-    (invol φ ψ ν j i)
-
-invol'' : (φ ψ : Factor n) (ν : NF n) → swap φ ψ ν ≡ sym (swap ψ φ ν)
-invol'' φ ψ ν j i =
-  hcomp
-    (λ where
-      k (i = i0) → swap ψ φ ν (~ j ∨ k)
-      k (i = i1) → ψ *ᶠ φ *ᶠ ν
-      k (j = i0) → swap φ ψ ν i
-      k (j = i1) → swap ψ φ ν (~ i ∧ k))
-    (invol φ ψ ν j i)
-
-square' : (ε φ ψ γ : Factor n) (ν : NF n) →
-    cong (λ μ → ε *ᶠ φ *ᶠ μ) (swap ψ γ ν) ∙ swap ε φ (γ *ᶠ ψ *ᶠ ν)
-  ≡ swap ε φ (ψ *ᶠ γ *ᶠ ν) ∙ cong (λ μ → φ *ᶠ ε *ᶠ μ) (swap ψ γ ν)
-square' ε φ ψ γ ν = Square→compPath (square ε φ ψ γ ν)
-
 --------------------------------------------------------------------------------
 -- Product and exponential for NF
 
@@ -128,7 +76,6 @@ _*_ : NF n → NF n → NF n
 (φ *ᶠ ν) * μ = φ *ᶠ (ν * μ)
 swap φ ψ ν i * μ = swap φ ψ (ν * μ) i
 invol φ ψ ν i j * μ = invol φ ψ (ν * μ) i j
-square ε φ ψ γ ν i j * μ = square ε φ ψ γ (ν * μ) i j
 hexagon ε φ ψ ν i j * μ = path i j
   where
     path : Path (ε *ᶠ φ *ᶠ ψ *ᶠ ν * μ ≡ ψ *ᶠ φ *ᶠ ε *ᶠ ν * μ)
@@ -153,8 +100,6 @@ _⇒_ : NF n → NF n → NF n
 ν ⇒ (φ *ᶠ μ) = (ν ⇒ᶠ φ) *ᶠ (ν ⇒ μ)
 ν ⇒ swap φ ψ μ i = swap (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ μ) i
 ν ⇒ invol φ ψ μ i j = invol (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ μ) i j
-ν ⇒ square ε φ ψ γ μ i j =
-  square (ν ⇒ᶠ ε) (ν ⇒ᶠ φ) (ν ⇒ᶠ ψ) (ν ⇒ᶠ γ) (ν ⇒ μ) i j
 ν ⇒ hexagon ε φ ψ μ i j = path i j
   where
     path : Path ((ν ⇒ᶠ ε) *ᶠ (ν ⇒ᶠ φ) *ᶠ (ν ⇒ᶠ ψ) *ᶠ (ν ⇒ μ) ≡ (ν ⇒ᶠ ψ) *ᶠ (ν ⇒ᶠ φ) *ᶠ (ν ⇒ᶠ ε) *ᶠ (ν ⇒ μ))
