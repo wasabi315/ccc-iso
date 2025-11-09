@@ -34,12 +34,7 @@ data NF n where
   swap : ∀ φ ψ ν → φ *ᶠ ψ *ᶠ ν ≡ ψ *ᶠ φ *ᶠ ν
 
   -- swap is involutive
-  invol : ∀ φ ψ ν →
-    Square
-      (swap φ ψ ν)
-      refl
-      (sym (swap ψ φ ν))
-      refl
+  invol : ∀ φ ψ ν → swap φ ψ ν ≡ sym (swap ψ φ ν)
 
   -- identify the two different paths from ε * φ * ψ * ν to ψ * φ * ε * ν
   hexagon : ∀ ε φ ψ ν →
