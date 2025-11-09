@@ -6,11 +6,10 @@ open import Cubical.Foundations.GroupoidLaws using
   ; assoc; rUnit; lUnit)
 open import Cubical.Foundations.HLevels using
   ( isOfHLevel→isOfHLevelDep; isSet→isGroupoid; isSet→SquareP
-  ; isPropΠ; isPropΠ3; isSetΠ; isSetΠ2; isSetΣ; isOfHLevelPathP; isOfHLevelPathP')
+  ; isPropΠ; isPropΠ3; isSetΠ; isSetΠ2)
 open import Cubical.Foundations.Path using (flipSquare; compPath→Square; Square→compPath; _∙v_)
 open import Cubical.Data.Fin.Recursive.Base using (Fin)
 open import Cubical.Data.Nat.Base using (ℕ)
-open import Cubical.Data.Sigma using (Σ-syntax; _,_; fst; snd; ΣPathPProp)
 
 open import CccIso.NF
 
@@ -141,16 +140,16 @@ module ElimPropNF {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ ν → isProp (B
 -- Some basic properties
 
 -- swap is natural
-swap-natural : (φ ψ : Factor n) (ν μ : NF n) (p : ν ≡ μ) →
+swap-natural : (φ ψ : Factor n) {ν μ : NF n} (p : ν ≡ μ) →
   Square
     (swap φ ψ ν)
     (swap φ ψ μ)
     (cong (λ ι → φ *ᶠ ψ *ᶠ ι) p)
     (cong (λ ι → ψ *ᶠ φ *ᶠ ι) p)
-swap-natural φ ψ ν μ =
+swap-natural φ ψ =
   J (λ ι p →
       Square
-        (swap φ ψ ν)
+        (swap φ ψ _)
         (swap φ ψ ι)
         (cong (λ ζ → φ *ᶠ ψ *ᶠ ζ) p)
         (cong (λ ζ → ψ *ᶠ φ *ᶠ ζ) p))
@@ -164,7 +163,7 @@ swap-commute : (ε φ ψ γ : Factor n) (ν μ : NF n) →
     (cong (λ ι → ε *ᶠ φ *ᶠ ν * ι) (swap ψ γ μ))
     (cong (λ ι → φ *ᶠ ε *ᶠ ν * ι) (swap ψ γ μ))
 swap-commute ε φ ψ γ ν μ =
-  swap-natural ε φ (ν * ψ *ᶠ γ *ᶠ μ) (ν * γ *ᶠ ψ *ᶠ μ) (cong (ν *_) (swap ψ γ μ))
+  swap-natural ε φ (cong (ν *_) (swap ψ γ μ))
 
 --------------------------------------------------------------------------------
 -- Important properties
@@ -199,7 +198,7 @@ shift φ =
           (cong (λ ι → ψ *ᶠ ε *ᶠ ι) p)
           (swap ε ψ (φ *ᶠ ν * μ))
           (swap ε ψ (ν * φ *ᶠ μ))
-        square1 = flipSquare (swap-natural ε ψ (φ *ᶠ ν * μ) (ν * φ *ᶠ μ) p)
+        square1 = flipSquare (swap-natural ε ψ p)
 
         square2 : Square
           ((swap φ ε (ψ *ᶠ ν * μ) ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ)))
@@ -282,7 +281,7 @@ shift-hexagon φ ψ =
                   (λ p →
                     cong (φ *ᶠ_) (swap ψ ε (ν * μ)) ∙
                     p ∙ cong (ε *ᶠ_) (shift φ ν (ψ *ᶠ μ)))
-                  (Square→compPath (flipSquare (swap-natural φ ε _ _ (shift ψ ν μ))))
+                  (Square→compPath (flipSquare (swap-natural φ ε (shift ψ ν μ))))
               ⟩
                 cong (φ *ᶠ_) (swap ψ ε (ν * μ))
                   ∙ (cong (λ ι → φ *ᶠ ε *ᶠ ι) (shift ψ ν μ) ∙ swap φ ε (ν * ψ *ᶠ μ))
@@ -321,7 +320,7 @@ shift-hexagon φ ψ =
                   (λ p →
                     cong (ψ *ᶠ_) (swap φ ε (ν * μ)) ∙
                     p ∙ cong (ε *ᶠ_) (shift ψ ν (φ *ᶠ μ)))
-                  (Square→compPath (flipSquare (swap-natural ψ ε _ _ (shift φ ν μ))))
+                  (Square→compPath (flipSquare (swap-natural ψ ε (shift φ ν μ))))
               ⟩
                 cong (ψ *ᶠ_) (swap φ ε (ν * μ))
                   ∙ (cong (λ ι → ψ *ᶠ ε *ᶠ ι) (shift φ ν μ) ∙ swap ψ ε (ν * φ *ᶠ μ))
@@ -371,7 +370,7 @@ shift-hexagon φ ψ =
             (cong (λ ι → ψ *ᶠ φ *ᶠ ι) (ih μ))
             (swap φ ψ (ν * μ))
             (swap φ ψ (μ * ν))
-          square0 = flipSquare (swap-natural φ ψ (ν * μ) (μ * ν) (ih μ))
+          square0 = flipSquare (swap-natural φ ψ (ih μ))
 
           square1 : Square
             (cong (φ *ᶠ_) (shift ψ μ ν) ∙ shift φ μ (ψ *ᶠ ν))
