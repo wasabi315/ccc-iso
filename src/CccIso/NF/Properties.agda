@@ -176,42 +176,51 @@ shift φ =
     (λ _ → isSetΠ λ _ → trunc _ _)
     (λ _ → refl)
     (λ ψ {ν} ih μ → swap φ ψ (ν * μ) ∙ cong (ψ *ᶠ_) (ih μ))
-    (λ ε ψ {ν} ih → funExt λ μ →
-      let square0 : Square
-            (swap φ ε (ψ *ᶠ ν * μ) ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ)))
-            (swap φ ψ (ε *ᶠ ν * μ) ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ)))
-            (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
-            (swap ε ψ (φ *ᶠ ν * μ))
-          square0 = doubleCompPaths→Square (hexagon φ ε ψ (ν * μ))
+    (λ ε ψ {ν} ih i μ → shift-swap ε ψ ν μ (ih μ) i)
+  where abstract -- abstract greatly improves type checking performance
+    shift-swap : ∀ ε ψ ν μ (p : φ *ᶠ ν * μ ≡ ν * φ *ᶠ μ) → Square
+      (swap φ ε (ψ *ᶠ ν * μ)
+        ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ) ∙ cong (ψ *ᶠ_) p))
+      (swap φ ψ (ε *ᶠ ν * μ)
+        ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ) ∙ cong (ε *ᶠ_) p))
+      (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
+      (swap ε ψ (ν * φ *ᶠ μ))
+    shift-swap ε ψ ν μ p = square3
+      where
+        square0 : Square
+          (swap φ ε (ψ *ᶠ ν * μ) ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ)))
+          (swap φ ψ (ε *ᶠ ν * μ) ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ)))
+          (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
+          (swap ε ψ (φ *ᶠ ν * μ))
+        square0 = doubleCompPaths→Square (hexagon φ ε ψ (ν * μ))
 
-          square1 : Square
-            (cong (λ ι → ε *ᶠ ψ *ᶠ ι) (ih μ))
-            (cong (λ ι → ψ *ᶠ ε *ᶠ ι) (ih μ))
-            (swap ε ψ (φ *ᶠ ν * μ))
-            (swap ε ψ (ν * φ *ᶠ μ))
-          square1 = flipSquare (swap-natural ε ψ (φ *ᶠ ν * μ) (ν * φ *ᶠ μ) (ih μ))
+        square1 : Square
+          (cong (λ ι → ε *ᶠ ψ *ᶠ ι) p)
+          (cong (λ ι → ψ *ᶠ ε *ᶠ ι) p)
+          (swap ε ψ (φ *ᶠ ν * μ))
+          (swap ε ψ (ν * φ *ᶠ μ))
+        square1 = flipSquare (swap-natural ε ψ (φ *ᶠ ν * μ) (ν * φ *ᶠ μ) p)
 
-          square2 : Square
-            ((swap φ ε (ψ *ᶠ ν * μ) ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ)))
-              ∙ cong (λ ι → ε *ᶠ ψ *ᶠ ι) (ih μ))
-            ((swap φ ψ (ε *ᶠ ν * μ) ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ)))
-              ∙ cong (λ ι → ψ *ᶠ ε *ᶠ ι) (ih μ))
-            (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
-            (swap ε ψ (ν * φ *ᶠ μ))
-          square2 = square0 ∙₂ square1
+        square2 : Square
+          ((swap φ ε (ψ *ᶠ ν * μ) ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ)))
+            ∙ cong (λ ι → ε *ᶠ ψ *ᶠ ι) p)
+          ((swap φ ψ (ε *ᶠ ν * μ) ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ)))
+            ∙ cong (λ ι → ψ *ᶠ ε *ᶠ ι) p)
+          (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
+          (swap ε ψ (ν * φ *ᶠ μ))
+        square2 = square0 ∙₂ square1
 
-          square3 : Square
-            (swap φ ε (ψ *ᶠ ν * μ)
-              ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ) ∙ cong (ψ *ᶠ_) (ih μ)))
-            (swap φ ψ (ε *ᶠ ν * μ)
-              ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ) ∙ cong (ε *ᶠ_) (ih μ)))
-            (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
-            (swap ε ψ (ν * φ *ᶠ μ))
-          square3 =
-            (cong (swap φ ε _ ∙_) (cong-∙ (ε *ᶠ_) _ _) ∙ assoc _ _ _)
-            ◁ square2 ▷
-            sym (cong (swap φ ψ _ ∙_) (cong-∙ (ψ *ᶠ_) _ _) ∙ assoc _ _ _)
-       in square3)
+        square3 : Square
+          (swap φ ε (ψ *ᶠ ν * μ)
+            ∙ cong (ε *ᶠ_) (swap φ ψ (ν * μ) ∙ cong (ψ *ᶠ_) p))
+          (swap φ ψ (ε *ᶠ ν * μ)
+            ∙ cong (ψ *ᶠ_) (swap φ ε (ν * μ) ∙ cong (ε *ᶠ_) p))
+          (cong (φ *ᶠ_) (swap ε ψ (ν * μ)))
+          (swap ε ψ (ν * φ *ᶠ μ))
+        square3 =
+          (cong (swap φ ε _ ∙_) (cong-∙ (ε *ᶠ_) _ _) ∙ assoc _ _ _)
+          ◁ square2 ▷
+          sym (cong (swap φ ψ _ ∙_) (cong-∙ (ψ *ᶠ_) _ _) ∙ assoc _ _ _)
 
 shift-hexagon : (φ ψ : Factor n) (ν μ : NF n) →
   Path (φ *ᶠ ψ *ᶠ ν * μ ≡ ν * ψ *ᶠ φ *ᶠ μ)
