@@ -428,3 +428,28 @@ shift-hexagon φ ψ =
 
 ⇒-annihilʳ : (α : NF n) → α ⇒ ⊤ ≡ ⊤
 ⇒-annihilʳ _ = refl
+
+*-pentagon : (α β γ δ : NF n) →
+  Path (((α * β) * γ) * δ ≡ α * (β * (γ * δ)))
+    (*-assoc (α * β) γ δ ∙ *-assoc α β (γ * δ))
+    (cong (_* δ) (*-assoc α β γ) ∙∙ *-assoc α (β * γ) δ ∙∙ cong (α *_) (*-assoc β γ δ))
+*-pentagon =
+  ElimPropNF.f
+    (λ _ → isPropΠ3 λ _ _ _ → trunc _ _ _ _)
+    (λ β γ δ → sym (rUnit _) ∙ doubleLUnit _)
+    (λ φ {α} ih β γ δ →
+      sym (cong-∙ (φ *ᶠ_) _ _)
+        ∙∙ cong (cong (φ *ᶠ_)) (ih β γ δ)
+        ∙∙ cong-∙∙ (φ *ᶠ_) _ _ _)
+
+*-triangle : (α β : NF n) →
+  Square
+    (*-assoc α ⊤ β)
+    (cong (_* β) (*-identityʳ α))
+    refl
+    (cong (α *_) (*-identityˡ β))
+*-triangle =
+  ElimPropNF.f
+    (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    (λ _ → refl)
+    (λ φ {α} ih β → cong (cong (φ *ᶠ_)) (ih β))
