@@ -3,7 +3,7 @@
 > [!NOTE]
 > Work in progress.
 
-A Cubical Agda formalization of a decider for the following type isomorphisms:
+A Cubical Agda formalization of isomorphisms in CCC
 
 ```math
 \begin{align*}
