@@ -1,4 +1,4 @@
 name: ccc-iso
 include: src
 depend: cubical
-flags: --cubical --guardedness --no-import-sorts
+flags: --safe --cubical --guardedness --no-import-sorts

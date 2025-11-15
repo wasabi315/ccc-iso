@@ -5,7 +5,7 @@ open import Cubical.Foundations.Equiv using
   (_≃_; idEquiv; _∙ₑ_; equivEq; compEquivIdEquiv)
 open import Cubical.Foundations.HLevels using
   (HLevel; TypeOfHLevel; hSet; isPropIsOfHLevel; TypeOfHLevel≡;
-    isSet→SquareP; isSet×; isSet→; isGroupoidHSet)
+    isSet→SquareP; isSet×; isSet→; isGroupoidHSet; isGroupoidΠ)
 open import Cubical.Foundations.Isomorphism using (Iso; iso)
 open import Cubical.Foundations.GroupoidLaws using (lUnit)
 open import Cubical.Foundations.GroupoidLaws using (cong-∙∙)
@@ -165,36 +165,17 @@ opaque
   ×ˢ-hexagon A B C D =
     TypeOfHLevel≡≡ 2 (×-hexagon (A .fst) (B .fst) (C .fst) (D .fst))
 
+open Model
 
-{-# TERMINATING #-}
-⟦_⟧ᶠ : (φ : Factor n) (ρ : Fin n → hSet ℓ-zero) → hSet ℓ-zero
-⟦_⟧ⁿ : (α : NF n) (ρ : Fin n → hSet ℓ-zero) → hSet ℓ-zero
+SetModel : Model _ _
+SetModel .Factorᴹ n = (Fin n → hSet _) → hSet _
+SetModel .NFᴹ n = (Fin n → hSet _) → hSet _
+SetModel ._⇒ιᴹ_ A x ρ = A ρ →ˢ ρ x
+SetModel .⊤ᴹ ρ = Unitˢ
+SetModel ._*ᴹ_ A B ρ = A ρ ×ˢ B ρ
+SetModel .swapᴹ A B C i ρ = ×ˢ-swap (A ρ) (B ρ) (C ρ) i
+SetModel .involᴹ A B C i j ρ = ×ˢ-invol (A ρ) (B ρ) (C ρ) i j
+SetModel .hexagonᴹ A B C D i j ρ = ×ˢ-hexagon (A ρ) (B ρ) (C ρ) (D ρ) i j
+SetModel .truncNFᴹ = isGroupoidΠ λ _ → isGroupoidHSet
 
-⟦ α ⇒ι x ⟧ᶠ ρ = ⟦ α ⟧ⁿ ρ →ˢ ρ x
-
-⟦ ⊤ ⟧ⁿ ρ = Unitˢ
-⟦ φ *ᶠ α ⟧ⁿ ρ = ⟦ φ ⟧ᶠ ρ ×ˢ ⟦ α ⟧ⁿ ρ
-⟦ swap φ ψ α i ⟧ⁿ ρ = ×ˢ-swap (⟦ φ ⟧ᶠ ρ) (⟦ ψ ⟧ᶠ ρ) (⟦ α ⟧ⁿ ρ) i
-⟦ invol φ ψ α i j ⟧ⁿ ρ = ×ˢ-invol (⟦ φ ⟧ᶠ ρ) (⟦ ψ ⟧ᶠ ρ) (⟦ α ⟧ⁿ ρ) i j
-⟦ hexagon ε φ ψ α i j ⟧ⁿ ρ = path i j
-  where
-    path :
-        cong (λ β → ⟦ β ⟧ⁿ ρ)
-          (swap ε φ (ψ *ᶠ α)
-            ∙∙ cong (φ *ᶠ_) (swap ε ψ α)
-            ∙∙ swap φ ψ (ε *ᶠ α))
-      ≡
-        cong (λ β → ⟦ β ⟧ⁿ ρ)
-          (cong (ε *ᶠ_) (swap φ ψ α)
-            ∙∙ swap ε ψ (φ *ᶠ α)
-            ∙∙ cong (ψ *ᶠ_) (swap ε φ α))
-    path =
-      cong-∙∙ (λ β → ⟦ β ⟧ⁿ ρ) _ _ _
-        ∙∙ ×ˢ-hexagon (⟦ ε ⟧ᶠ ρ) (⟦ φ ⟧ᶠ ρ) (⟦ ψ ⟧ᶠ ρ) (⟦ α ⟧ⁿ ρ)
-        ∙∙ sym (cong-∙∙ (λ β → ⟦ β ⟧ⁿ ρ) _ _ _)
-⟦ trunc α β p q P Q i j k ⟧ⁿ ρ =
-  isGroupoidHSet
-    (⟦ α ⟧ⁿ ρ) (⟦ β ⟧ⁿ ρ)
-    (λ i → ⟦ p i ⟧ⁿ ρ) (λ i → ⟦ q i ⟧ⁿ ρ)
-    (λ i j → ⟦ P i j ⟧ⁿ ρ) (λ i j → ⟦ Q i j ⟧ⁿ ρ)
-    i j k
+open Rec SetModel using (⟦_⟧ᶠ; ⟦_⟧ⁿ) public

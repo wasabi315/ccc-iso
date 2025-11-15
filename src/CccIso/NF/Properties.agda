@@ -1,7 +1,8 @@
 module CccIso.NF.Properties where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.HLevels using
+  (isPropΠ; isPropΠ2; isPropΠ3; isSetΠ; isSetΠ2; isOfHLevelPathP')
 open import Cubical.Foundations.GroupoidLaws using
   (cong-∙; cong-∙∙; doubleCompPath-elim; doubleCompPath-elim';
     assoc; rUnit; lUnit; symDistr)
@@ -17,21 +18,6 @@ private
 
 --------------------------------------------------------------------------------
 -- Utilities
-
-doubleCompPathP : ∀ {a b} {A : Type a} {B : A → Type b} →
-  {x y z w : A} {x' : B x} {y' : B y} {z' : B z} {w' : B w} →
-  {p : x ≡ y} {q : y ≡ z} {r : z ≡ w} →
-  PathP (λ i → B (p i)) x' y' →
-  PathP (λ i → B (q i)) y' z' →
-  PathP (λ i → B (r i)) z' w' →
-  PathP (λ i → B ((p ∙∙ q ∙∙ r) i)) x' w'
-doubleCompPathP {B = B} {p = p} {q = q} {r = r} P Q R i =
-  comp
-    (λ j → B (doubleCompPath-filler p q r j i))
-    (λ where
-      j (i = i0) → P (~ j)
-      j (i = i1) → R j)
-    (Q i)
 
 doubleCompPaths→Square : ∀ {a} {A : Type a} {x y y' z z' w : A} →
   {p : x ≡ y} {q : y ≡ z} {r : z ≡ w} →
@@ -64,71 +50,11 @@ Square→doubleCompPath' P =
 doubleRUnit : ∀ {a} {A : Type a} {x y : A} (p : x ≡ y) → p ≡ (p ∙∙ refl ∙∙ refl)
 doubleRUnit p = rUnit _ ∙∙ rUnit _ ∙∙ sym (doubleCompPath-elim _ _ _)
 
-doubleLUnit : ∀ {a} {A : Type a} {x y : A} (p : x ≡ y) → p ≡ (refl ∙∙ refl ∙∙ p)
-doubleLUnit p =
-  lUnit _ ∙∙ cong (refl ∙_) (lUnit _) ∙∙ sym (doubleCompPath-elim' _ _ _)
-
 _◁v_▷_ : ∀ {a} {A : Type a} {x y y' z : A} →
   {p : x ≡ y} {p' p'' : x ≡ y'} {q q' : y ≡ z} {q'' : y' ≡ z} →
   (Q : p' ≡ p'') (P : Square p q'' p' q) (R : q ≡ q') →
   Square p q'' p'' q'
 Q ◁v P ▷ R = subst2 (Square _ _) Q R P
-
---------------------------------------------------------------------------------
--- Eliminators
-
-module _ {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ α → isSet (B α))
-  (⊤* : B ⊤)
-  (_**_ : ∀ φ {α} (α* : B α) → B (φ *ᶠ α))
-  (swap* : ∀ φ ψ {α} (α* : B α) →
-    PathP (λ i → B (swap φ ψ α i)) (φ ** (ψ ** α*)) (ψ ** (φ ** α*)))
-  where
-
-  elimSetNF : ∀ α → B α
-  elimSetNF ⊤ = ⊤*
-  elimSetNF (φ *ᶠ α) = φ ** elimSetNF α
-  elimSetNF (swap φ ψ α i) = swap* φ ψ (elimSetNF α) i
-  elimSetNF (invol φ ψ α i j) =
-    isSet→SquareP (λ i j → trunc* (invol φ ψ α i j))
-      (swap* φ ψ (elimSetNF α))
-      (symP (swap* ψ φ (elimSetNF α)))
-      refl
-      refl
-      i j
-  elimSetNF (hexagon ε φ ψ α i j) =
-    isSet→SquareP (λ i j → trunc* (hexagon ε φ ψ α i j))
-      (doubleCompPathP {B = B}
-        (swap* ε φ (ψ ** elimSetNF α))
-        (congP (λ _ → φ **_) (swap* ε ψ (elimSetNF α)))
-        (swap* φ ψ (ε ** elimSetNF α)))
-      (doubleCompPathP {B = B}
-        (congP (λ _ → ε **_) (swap* φ ψ (elimSetNF α)))
-        (swap* ε ψ (φ ** elimSetNF α))
-        (congP (λ _ → ψ **_) (swap* ε φ (elimSetNF α))))
-      refl
-      refl
-      i j
-  elimSetNF (trunc α β p q P Q i j k) =
-    isOfHLevel→isOfHLevelDep 3 (λ α → isSet→isGroupoid (trunc* α))
-      (elimSetNF α) (elimSetNF β)
-      (λ i → elimSetNF (p i)) (λ i → elimSetNF (q i))
-      (λ i j → elimSetNF (P i j)) (λ i j → elimSetNF (Q i j))
-      (trunc α β p q P Q)
-      i j k
-
-
-module _ {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ α → isProp (B α))
-  (⊤* : B ⊤)
-  (_**_ : ∀ φ {α} (α* : B α) → B (φ *ᶠ α))
-  where
-
-  elimPropNF : ∀ α → B α
-  elimPropNF = elimSetNF (λ α → isProp→isSet (trunc* α)) ⊤* _**_
-    (λ φ ψ {α} α* →
-      isProp→PathP
-        (λ i → trunc* (swap φ ψ α i))
-        (φ ** (ψ ** α*))
-        (ψ ** (φ ** α*)))
 
 --------------------------------------------------------------------------------
 -- Some basic properties
@@ -160,9 +86,9 @@ shift φ =
     (λ _ → refl)
     (λ ψ {α} ih β → swap φ ψ (α * β) ∙ cong (ψ *ᶠ_) (ih β))
     (λ ε ψ {α} ih i β → shift-swap ε ψ α β (ih β) i)
-  where abstract
-    -- abstract greatly improves type checking performance
-    -- 7x faster check for *-comm
+  -- Giving an explicit name to the module improves type checking performance for some reason...
+  module Shift where abstract
+    -- abstract greatly improves type checking performance for *-comm
     shift-swap : ∀ ε ψ α β (p : φ *ᶠ α * β ≡ α * φ *ᶠ β) →
       Square
         (swap φ ε (ψ *ᶠ α * β)
@@ -215,7 +141,7 @@ shift-hexagon : (φ ψ : Factor n) (α β : NF n) →
 shift-hexagon φ ψ =
   elimPropNF
     (λ _ → isPropΠ λ _ → trunc _ _ _ _)
-    (λ β → sym (doubleRUnit (swap φ ψ β)) ∙ doubleLUnit (swap φ ψ β))
+    (λ β → sym (doubleRUnit (swap φ ψ β)) ∙ lUnit (swap φ ψ β))
     (λ ε {α} ih β →
       let square0 : Square
             (swap φ ψ (ε *ᶠ α * β))
@@ -346,7 +272,7 @@ shift-hexagon φ ψ =
     (λ φ ψ ih j i → swap φ ψ (ih i) j)
 
 *-comm : (α β : NF n) → α * β ≡ β * α
-*-comm {n = n} =
+*-comm =
   elimSetNF
     (λ _ → isSetΠ λ _ → trunc _ _)
     (λ β → sym (*-identityʳ β))
@@ -445,7 +371,7 @@ shift-hexagon φ ψ =
 *-pentagon =
   elimPropNF
     (λ _ → isPropΠ3 λ _ _ _ → trunc _ _ _ _)
-    (λ β γ δ → sym (rUnit _) ∙ doubleLUnit _)
+    (λ β γ δ → sym (rUnit _) ∙ lUnit _)
     (λ φ ih β γ δ →
       sym (cong-∙ (φ *ᶠ_) _ _)
         ∙∙ cong (cong (φ *ᶠ_)) (ih β γ δ)
@@ -504,7 +430,7 @@ shift-hexagon φ ψ =
                 (swap φ ψ (α * β))
                 (sym (cong (λ γ → φ *ᶠ ψ *ᶠ γ) (*-comm α β)))
                 (sym (cong (λ γ → ψ *ᶠ φ *ᶠ γ) (*-comm α β)))
-              square4 j = swap-natural φ ψ (*-comm α β) (~ j)
+              square4 = symP (swap-natural φ ψ (*-comm α β))
 
               square5 : Square
                 (swap φ ψ (α * β))
