@@ -13,7 +13,7 @@ open import Cubical.Foundations.Univalence using
   (ua; uaIdEquiv; uaInvEquiv; EquivJ)
 open import Cubical.Data.Fin.Recursive.Base using (Fin)
 open import Cubical.Data.Nat.Base using (ℕ)
-open import Cubical.Data.Unit using (Unit; isSetUnit)
+open import Cubical.Data.Unit using (Unit*; isSetUnit*)
 open import Cubical.Data.Sigma using (_×_; _,_; Σ-cong-equiv-snd)
 open import Cubical.Reflection.StrictEquiv
 
@@ -131,8 +131,8 @@ module _ (A : Type a) (B : Type b) (C : Type c) where
 --------------------------------------------------------------------------------
 -- Interpretation into hSet
 
-Unitˢ : hSet ℓ-zero
-Unitˢ = Unit , isSetUnit
+Unitˢ : hSet ℓ
+Unitˢ = Unit* , isSetUnit*
 
 _×ˢ_ : (A : hSet a) (B : hSet b) → hSet (ℓ-max a b)
 (A , ASet) ×ˢ (B , BSet) = (A × B) , isSet× ASet BSet
@@ -165,17 +165,18 @@ opaque
   ×ˢ-hexagon A B C D =
     TypeOfHLevel≡≡ 2 (×-hexagon (A .fst) (B .fst) (C .fst) (D .fst))
 
-open Model
+module _ {ℓ} where
+  open Model
 
-SetModel : Model _ _
-SetModel .Factorᴹ n = (Fin n → hSet _) → hSet _
-SetModel .NFᴹ n = (Fin n → hSet _) → hSet _
-SetModel ._⇒ιᴹ_ A x ρ = A ρ →ˢ ρ x
-SetModel .⊤ᴹ ρ = Unitˢ
-SetModel ._*ᴹ_ A B ρ = A ρ ×ˢ B ρ
-SetModel .swapᴹ A B C i ρ = ×ˢ-swap (A ρ) (B ρ) (C ρ) i
-SetModel .involᴹ A B C i j ρ = ×ˢ-invol (A ρ) (B ρ) (C ρ) i j
-SetModel .hexagonᴹ A B C D i j ρ = ×ˢ-hexagon (A ρ) (B ρ) (C ρ) (D ρ) i j
-SetModel .truncNFᴹ = isGroupoidΠ λ _ → isGroupoidHSet
+  SetModel : Model (ℓ-suc ℓ) (ℓ-suc ℓ)
+  SetModel .Factorᴹ n = (Fin n → hSet ℓ) → hSet ℓ
+  SetModel .NFᴹ n = (Fin n → hSet ℓ) → hSet ℓ
+  SetModel ._⇒ιᴹ_ A x ρ = A ρ →ˢ ρ x
+  SetModel .⊤ᴹ ρ = Unitˢ
+  SetModel ._*ᴹ_ A B ρ = A ρ ×ˢ B ρ
+  SetModel .swapᴹ A B C i ρ = ×ˢ-swap (A ρ) (B ρ) (C ρ) i
+  SetModel .involᴹ A B C i j ρ = ×ˢ-invol (A ρ) (B ρ) (C ρ) i j
+  SetModel .hexagonᴹ A B C D i j ρ = ×ˢ-hexagon (A ρ) (B ρ) (C ρ) (D ρ) i j
+  SetModel .truncNFᴹ = isGroupoidΠ λ _ → isGroupoidHSet
 
-open Rec SetModel using (⟦_⟧ᶠ; ⟦_⟧ⁿ) public
+  open Rec SetModel using (⟦_⟧ᶠ; ⟦_⟧ⁿ) public
