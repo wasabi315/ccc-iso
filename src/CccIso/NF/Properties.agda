@@ -1,14 +1,18 @@
 module CccIso.NF.Properties where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels using
-  (isPropΠ; isPropΠ2; isPropΠ3; isSetΠ; isSetΠ2; isOfHLevelPathP')
 open import Cubical.Foundations.GroupoidLaws using
   (cong-∙; cong-∙∙; doubleCompPath-elim; doubleCompPath-elim';
     assoc; rUnit; lUnit; symDistr)
+open import Cubical.Foundations.HLevels using
+  (isPropΠ; isPropΠ2; isPropΠ3; isSetΠ; isSetΠ2; isGroupoid×;
+    isOfHLevelPathP'; isGroupoidRetract; isSet→isGroupoid)
 open import Cubical.Foundations.Path using
   (flipSquare; compPath→Square; Square→compPath; _∙v_)
+open import Cubical.Data.Fin.Recursive.Base using (Fin)
+open import Cubical.Data.Fin.Recursive.Properties using (isSetFin)
 open import Cubical.Data.Nat.Base using (ℕ)
+open import Cubical.Data.Sigma.Base using (_×_; _,_)
 
 open import CccIso.NF
 
@@ -56,8 +60,38 @@ _◁v_▷_ : ∀ {a} {A : Type a} {x y y' z : A} →
   Square p q'' p'' q'
 Q ◁v P ▷ R = subst2 (Square _ _) Q R P
 
+cong₂-∙ : ∀ {a b c} {A : Type a} {B : Type b} {C : Type c} →
+  {x y z : A} {u v w : B} (f : A → B → C) →
+  (p : x ≡ y) (q : y ≡ z) (r : u ≡ v) (s : v ≡ w) →
+  cong₂ f (p ∙ q) (r ∙ s) ≡ cong₂ f p r ∙ cong₂ f q s
+cong₂-∙ {x = x} {u = u} f p q r s j i =
+  hcomp
+    (λ where
+      k (i = i0) → f x u
+      k (i = i1) → f (q k) (s k)
+      k (j = i0) → f (compPath-filler p q k i) (compPath-filler r s k i)
+      k (j = i1) → compPath-filler (cong₂ f p r) (cong₂ f q s) k i)
+    (f (p i) (r i))
+
 --------------------------------------------------------------------------------
 -- Some basic properties
+
+Factor→× : Factor n → NF n × Fin n
+Factor→× (α ⇒ι x) = α , x
+
+×→Factor : NF n × Fin n → Factor n
+×→Factor (α , x) = α ⇒ι x
+
+Factor→×→Factor : (α : Factor n) → ×→Factor (Factor→× α) ≡ α
+Factor→×→Factor (α ⇒ι x) = refl
+
+isGroupoidFactor : isGroupoid (Factor n)
+isGroupoidFactor {n = n} =
+  isGroupoidRetract
+    Factor→×
+    ×→Factor
+    Factor→×→Factor
+    (isGroupoid× trunc (isSet→isGroupoid isSetFin))
 
 -- swap is natural
 swap-natural : (φ ψ : Factor n) {α β : NF n} (p : α ≡ β) →
@@ -97,42 +131,48 @@ shift φ =
           ∙ cong (ψ *ᶠ_) (swap φ ε (α * β) ∙ cong (ε *ᶠ_) p))
         (cong (φ *ᶠ_) (swap ε ψ (α * β)))
         (swap ε ψ (α * φ *ᶠ β))
-    shift-swap ε ψ α β p = square3
+    shift-swap ε ψ α β p = goal
       where
-        square0 : Square
+        filler0 : Square
           (swap φ ε (ψ *ᶠ α * β) ∙ cong (ε *ᶠ_) (swap φ ψ (α * β)))
           (swap φ ψ (ε *ᶠ α * β) ∙ cong (ψ *ᶠ_) (swap φ ε (α * β)))
           (cong (φ *ᶠ_) (swap ε ψ (α * β)))
           (swap ε ψ (φ *ᶠ α * β))
-        square0 = doubleCompPaths→Square (hexagon φ ε ψ (α * β))
+        filler0 = doubleCompPaths→Square (hexagon φ ε ψ (α * β))
 
-        square1 : Square
+        filler1 : Square
           (cong (λ γ → ε *ᶠ ψ *ᶠ γ) p)
           (cong (λ γ → ψ *ᶠ ε *ᶠ γ) p)
           (swap ε ψ (φ *ᶠ α * β))
           (swap ε ψ (α * φ *ᶠ β))
-        square1 = flipSquare (swap-natural ε ψ p)
+        filler1 = flipSquare (swap-natural ε ψ p)
 
-        square2 : Square
+        filler2 : Square
+          (swap φ ε (ψ *ᶠ α * β)
+            ∙ cong (ε *ᶠ_) (swap φ ψ (α * β) ∙ cong (ψ *ᶠ_) p))
           ((swap φ ε (ψ *ᶠ α * β) ∙ cong (ε *ᶠ_) (swap φ ψ (α * β)))
             ∙ cong (λ γ → ε *ᶠ ψ *ᶠ γ) p)
+          refl
+          refl
+        filler2 = cong (swap φ ε _ ∙_) (cong-∙ (ε *ᶠ_) _ _) ∙ assoc _ _ _
+
+        filler3 : Square
           ((swap φ ψ (ε *ᶠ α * β) ∙ cong (ψ *ᶠ_) (swap φ ε (α * β)))
             ∙ cong (λ γ → ψ *ᶠ ε *ᶠ γ) p)
-          (cong (φ *ᶠ_) (swap ε ψ (α * β)))
-          (swap ε ψ (α * φ *ᶠ β))
-        square2 = square0 ∙₂ square1
+          (swap φ ψ (ε *ᶠ α * β)
+            ∙ cong (ψ *ᶠ_) (swap φ ε (α * β) ∙ cong (ε *ᶠ_) p))
+          refl
+          refl
+        filler3 = sym (cong (swap φ ψ _ ∙_) (cong-∙ (ψ *ᶠ_) _ _) ∙ assoc _ _ _)
 
-        square3 : Square
+        goal : Square
           (swap φ ε (ψ *ᶠ α * β)
             ∙ cong (ε *ᶠ_) (swap φ ψ (α * β) ∙ cong (ψ *ᶠ_) p))
           (swap φ ψ (ε *ᶠ α * β)
             ∙ cong (ψ *ᶠ_) (swap φ ε (α * β) ∙ cong (ε *ᶠ_) p))
           (cong (φ *ᶠ_) (swap ε ψ (α * β)))
           (swap ε ψ (α * φ *ᶠ β))
-        square3 =
-          (cong (swap φ ε _ ∙_) (cong-∙ (ε *ᶠ_) _ _) ∙ assoc _ _ _)
-          ◁ square2 ▷
-          sym (cong (swap φ ψ _ ∙_) (cong-∙ (ψ *ᶠ_) _ _) ∙ assoc _ _ _)
+        goal = filler2 ◁ (filler0 ∙₂ filler1) ▷ filler3
 
 shift-hexagon : (φ ψ : Factor n) (α β : NF n) →
   Path (φ *ᶠ ψ *ᶠ α * β ≡ α * ψ *ᶠ φ *ᶠ β)
@@ -143,41 +183,41 @@ shift-hexagon φ ψ =
     (λ _ → isPropΠ λ _ → trunc _ _ _ _)
     (λ β → sym (doubleRUnit (swap φ ψ β)) ∙ lUnit (swap φ ψ β))
     (λ ε {α} ih β →
-      let square0 : Square
+      let filler0 : Square
             (swap φ ψ (ε *ᶠ α * β))
             (cong (ε *ᶠ_) (swap φ ψ (α * β)))
             (cong (φ *ᶠ_) (swap ψ ε (α * β)) ∙ swap φ ε (ψ *ᶠ α * β))
             (cong (ψ *ᶠ_) (swap φ ε (α * β)) ∙ swap ψ ε (φ *ᶠ α * β))
-          square0 = doubleCompPaths→Square' (hexagon φ ψ ε (α * β))
+          filler0 = doubleCompPaths→Square' (hexagon φ ψ ε (α * β))
 
-          square1 : Square
+          filler1 : Square
             (cong (ε *ᶠ_) (swap φ ψ (α * β)))
             (cong (λ γ → ε *ᶠ α * γ) (swap φ ψ β))
             (cong (λ γ → ε *ᶠ φ *ᶠ γ) (shift ψ α β) ∙ cong (ε *ᶠ_) (shift φ α (ψ *ᶠ β)))
             (cong (λ γ → ε *ᶠ ψ *ᶠ γ) (shift φ α β) ∙ cong (ε *ᶠ_) (shift ψ α (φ *ᶠ β)))
-          square1 =
+          filler1 =
             doubleCompPaths→Square'
               (sym (cong-∙∙ (ε *ᶠ_) _ _ _)
                 ∙∙ cong (cong (ε *ᶠ_)) (ih β)
                 ∙∙ cong-∙∙ (ε *ᶠ_) _ _ _)
 
-          square2 : Square
+          filler2 : Square
             (swap φ ψ (ε *ᶠ α * β))
             (cong (λ γ → ε *ᶠ α * γ) (swap φ ψ β))
             ((cong (φ *ᶠ_) (swap ψ ε (α * β)) ∙ swap φ ε (ψ *ᶠ α * β))
               ∙ cong (λ γ → ε *ᶠ φ *ᶠ γ) (shift ψ α β) ∙ cong (ε *ᶠ_) (shift φ α (ψ *ᶠ β)))
             ((cong (ψ *ᶠ_) (swap φ ε (α * β)) ∙ swap ψ ε (φ *ᶠ α * β))
               ∙ cong (λ γ → ε *ᶠ ψ *ᶠ γ) (shift φ α β) ∙ cong (ε *ᶠ_) (shift ψ α (φ *ᶠ β)))
-          square2 = square0 ∙v square1
+          filler2 = filler0 ∙v filler1
 
-          square3 : Square
+          filler3 : Square
             (swap φ ψ (ε *ᶠ α * β))
             (cong (λ γ → ε *ᶠ α * γ) (swap φ ψ β))
             (cong (φ *ᶠ_) (swap ψ ε (α * β) ∙ cong (ε *ᶠ_) (shift ψ α β))
               ∙ swap φ ε (α * ψ *ᶠ β) ∙ cong (ε *ᶠ_) (shift φ α (ψ *ᶠ β)))
             (cong (ψ *ᶠ_) (swap φ ε (α * β) ∙ cong (ε *ᶠ_) (shift φ α β))
               ∙ swap ψ ε (α * φ *ᶠ β) ∙ cong (ε *ᶠ_) (shift ψ α (φ *ᶠ β)))
-          square3 =
+          filler3 =
               ( ((cong (φ *ᶠ_) (swap ψ ε (α * β)) ∙ swap φ ε (ψ *ᶠ α * β))
                   ∙ cong (λ γ → ε *ᶠ φ *ᶠ γ) (shift ψ α β)
                   ∙ cong (ε *ᶠ_) (shift φ α (ψ *ᶠ β)))
@@ -216,7 +256,7 @@ shift-hexagon φ ψ =
                   ∙ swap φ ε (α * ψ *ᶠ β)
                   ∙ cong (ε *ᶠ_) (shift φ α (ψ *ᶠ β)))
               ∎)
-            ◁v square2 ▷
+            ◁v filler2 ▷
               ( ((cong (ψ *ᶠ_) (swap φ ε (α * β)) ∙ swap ψ ε (φ *ᶠ α * β))
                   ∙ cong (λ γ → ε *ᶠ ψ *ᶠ γ) (shift φ α β)
                   ∙ cong (ε *ᶠ_) (shift ψ α (φ *ᶠ β)))
@@ -255,7 +295,7 @@ shift-hexagon φ ψ =
                   ∙ swap ψ ε (α * φ *ᶠ β)
                   ∙ cong (ε *ᶠ_) (shift ψ α (φ *ᶠ β)))
               ∎)
-      in Square→doubleCompPath' square3)
+      in Square→doubleCompPath' filler3)
 
 --------------------------------------------------------------------------------
 -- Properties of product and exponential
@@ -286,42 +326,46 @@ shift-hexagon φ ψ =
         (cong (ψ *ᶠ_) (cong (φ *ᶠ_) p ∙ shift φ β α) ∙ shift ψ β (φ *ᶠ α))
         (swap φ ψ (α * β))
         (cong (β *_) (swap φ ψ α))
-    *-comm-swap φ ψ α β p = square3
+    *-comm-swap φ ψ α β p = goal
       where
-        square0 : Square
+        filler0 : Square
           (cong (λ γ → φ *ᶠ ψ *ᶠ γ) p)
           (cong (λ γ → ψ *ᶠ φ *ᶠ γ) p)
           (swap φ ψ (α * β))
           (swap φ ψ (β * α))
-        square0 = flipSquare (swap-natural φ ψ p)
+        filler0 = flipSquare (swap-natural φ ψ p)
 
-        square1 : Square
+        filler1 : Square
           (cong (φ *ᶠ_) (shift ψ β α) ∙ shift φ β (ψ *ᶠ α))
           (cong (ψ *ᶠ_) (shift φ β α) ∙ shift ψ β (φ *ᶠ α))
           (swap φ ψ (β * α))
           (cong (β *_) (swap φ ψ α))
-        square1 = flipSquare (doubleCompPaths→Square' (shift-hexagon φ ψ β α))
+        filler1 = flipSquare (doubleCompPaths→Square' (shift-hexagon φ ψ β α))
 
-        square2 : Square
+        filler2 : Square
+          (cong (φ *ᶠ_) (cong (ψ *ᶠ_) p ∙ shift ψ β α) ∙ shift φ β (ψ *ᶠ α))
           (cong (λ γ → φ *ᶠ ψ *ᶠ γ) p
             ∙ cong (φ *ᶠ_) (shift ψ β α)
             ∙ shift φ β (ψ *ᶠ α))
+          refl
+          refl
+        filler2 = cong (_∙ shift φ β _) (cong-∙∙ (φ *ᶠ_) _ _ _) ∙ sym (assoc _ _ _)
+
+        filler3 : Square
           (cong (λ γ → ψ *ᶠ φ *ᶠ γ) p
             ∙ cong (ψ *ᶠ_) (shift φ β α)
             ∙ shift ψ β (φ *ᶠ α))
-          (swap φ ψ (α * β))
-          (cong (β *_) (swap φ ψ α))
-        square2 = square0 ∙₂ square1
+          (cong (ψ *ᶠ_) (cong (φ *ᶠ_) p ∙ shift φ β α) ∙ shift ψ β (φ *ᶠ α))
+          refl
+          refl
+        filler3 = sym (cong (_∙ shift ψ β _) (cong-∙∙ (ψ *ᶠ_) _ _ _) ∙ sym (assoc _ _ _))
 
-        square3 : Square
+        goal : Square
           (cong (φ *ᶠ_) (cong (ψ *ᶠ_) p ∙ shift ψ β α) ∙ shift φ β (ψ *ᶠ α))
           (cong (ψ *ᶠ_) (cong (φ *ᶠ_) p ∙ shift φ β α) ∙ shift ψ β (φ *ᶠ α))
           (swap φ ψ (α * β))
           (cong (β *_) (swap φ ψ α))
-        square3 =
-          (cong (_∙ shift φ β _) (cong-∙∙ (φ *ᶠ_) _ _ _) ∙ sym (assoc _ _ _))
-          ◁ square2 ▷
-          sym (cong (_∙ shift ψ β _) (cong-∙∙ (ψ *ᶠ_) _ _ _) ∙ sym (assoc _ _ _))
+        goal = filler2 ◁ (filler0 ∙₂ filler1) ▷ filler3
 
 *-assoc : (α β γ : NF n) → (α * β) * γ ≡ α * (β * γ)
 *-assoc =
@@ -389,6 +433,72 @@ shift-hexagon φ ψ =
     (λ _ → refl)
     (λ φ ih β → cong (cong (φ *ᶠ_)) (ih β))
 
+-- nonagon : (φ : Factor n) (α β γ : NF n) →
+--   Square
+--     (cong (φ *ᶠ_) (*-assoc β α γ)
+--       ∙∙ cong (λ δ → φ *ᶠ β * δ) (*-comm α γ)
+--       ∙∙ sym (cong (φ *ᶠ_) (*-assoc β γ α)))
+--     (cong (λ δ → β * φ *ᶠ δ) (*-comm α γ)
+--       ∙ cong (β *_) (shift φ γ α))
+--     (cong (_* γ) (shift φ β α)
+--       ∙ *-assoc β (φ *ᶠ α) γ)
+--     (shift φ (β * γ) α
+--       ∙ *-assoc β γ (φ *ᶠ α))
+-- nonagon φ α =
+--   elimPropNF
+--     (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+--     {!   !}
+--     {!   !}
+
+-- *-hexagon : (α β γ : NF n) →
+--   Path ((α * β) * γ ≡ β * (γ * α))
+--     (*-assoc α β γ ∙∙ *-comm α (β * γ) ∙∙ *-assoc β γ α)
+--     (cong (_* γ) (*-comm α β) ∙∙ *-assoc β α γ ∙∙ cong (β *_) (*-comm α γ))
+-- *-hexagon =
+--   elimPropNF
+--     (λ _ → isPropΠ2 λ _ _ → trunc _ _ _ _)
+--     (elimPropNF
+--       (λ _ → isPropΠ λ _ → trunc _ _ _ _)
+--       (λ _ → sym (rUnit _) ∙ lUnit _)
+--       (λ ψ ih' γ →
+--         sym (cong-∙∙ (ψ *ᶠ_) _ _ _)
+--           ∙∙ cong (cong (ψ *ᶠ_)) (ih' γ)
+--           ∙∙ cong-∙∙ (ψ *ᶠ_) _ _ _))
+--     (λ φ {α} ih β γ →
+--       let fill1 : Path (φ *ᶠ (α * β) * γ ≡ φ *ᶠ β * γ * α)
+--             (cong (φ *ᶠ_) (*-assoc α β γ)
+--               ∙∙ cong (φ *ᶠ_) (*-comm α (β * γ))
+--               ∙∙ cong (φ *ᶠ_) (*-assoc β γ α))
+--             (cong (λ δ → φ *ᶠ δ * γ) (*-comm α β)
+--               ∙∙ cong (φ *ᶠ_) (*-assoc β α γ)
+--               ∙∙ cong (λ δ → φ *ᶠ β * δ) (*-comm α γ))
+--           fill1 =
+--             sym (cong-∙∙ (φ *ᶠ_) _ _ _)
+--               ∙∙ cong (cong (φ *ᶠ_)) (ih β γ)
+--               ∙∙ cong-∙∙ (φ *ᶠ_) _ _ _
+
+--           fill2 : Square
+--             (cong (φ *ᶠ_) (*-assoc β α γ)
+--               ∙ cong (λ δ → φ *ᶠ β * δ) (*-comm α γ)
+--               ∙ sym (cong (φ *ᶠ_) (*-assoc β γ α)))
+--             (*-assoc β (φ *ᶠ α) γ
+--               ∙ cong (λ δ → β * φ *ᶠ δ) (*-comm α γ)
+--               ∙ cong (β *_) (shift φ γ α)
+--               ∙ sym (*-assoc β γ (φ *ᶠ α)))
+--             (cong (_* γ) (shift φ β α))
+--             (shift φ (β * γ) α)
+--           fill2 = {!   !}
+
+--           goal : Path (φ *ᶠ (α * β) * γ ≡ β * γ * φ *ᶠ α)
+--             (cong (φ *ᶠ_) (*-assoc α β γ)
+--               ∙∙ (cong (φ *ᶠ_) (*-comm α (β * γ)) ∙ shift φ (β * γ) α)
+--               ∙∙ *-assoc β γ (φ *ᶠ α))
+--             (cong (_* γ) (cong (φ *ᶠ_) (*-comm α β) ∙ shift φ β α)
+--               ∙∙ *-assoc β (φ *ᶠ α) γ
+--               ∙∙ cong (β *_) (cong (φ *ᶠ_) (*-comm α γ) ∙ shift φ γ α))
+--           goal = {!   !}
+--        in goal)
+
 *-bigon : (α β : NF n) → *-comm α β ≡ sym (*-comm β α)
 *-bigon =
   elimPropNF
@@ -402,58 +512,58 @@ shift-hexagon φ ψ =
         (λ _ → trunc _ _ _ _)
         (sym (rUnit _) ∙ cong (cong (φ *ᶠ_)) (ih ⊤))
         (λ ψ {β} ih' →
-          let square1 : Square
+          let filler1 : Square
                 (cong (φ *ᶠ_) (*-comm α (ψ *ᶠ β)))
                 (sym (cong (φ *ᶠ_) (cong (ψ *ᶠ_) (*-comm β α) ∙ shift ψ α β)))
                 refl
                 refl
-              square1 = cong (cong (φ *ᶠ_)) (ih (ψ *ᶠ β))
+              filler1 = cong (cong (φ *ᶠ_)) (ih (ψ *ᶠ β))
 
-              square2 : Square
+              filler2 : Square
                 (sym (cong (φ *ᶠ_) (cong (ψ *ᶠ_) (*-comm β α) ∙ shift ψ α β)))
                 (sym (cong (φ *ᶠ_) (shift ψ α β)))
                 refl
                 (cong (λ γ → φ *ᶠ ψ *ᶠ γ) (*-comm β α))
-              square2 =
+              filler2 =
                 congP (λ _ → sym)
                   (cong-∙ (φ *ᶠ_) _ _ ◁ symP (compPath-filler' _ _))
 
-              square3 : Square
+              filler3 : Square
                 (sym (cong (λ γ → φ *ᶠ ψ *ᶠ γ) (*-comm α β)))
                 (cong (λ γ → φ *ᶠ ψ *ᶠ γ) (*-comm β α))
                 refl
                 refl
-              square3 = cong (λ p → sym (cong (λ γ → φ *ᶠ ψ *ᶠ γ) p)) (ih β)
+              filler3 = cong (λ p → sym (cong (λ γ → φ *ᶠ ψ *ᶠ γ) p)) (ih β)
 
-              square4 : Square
+              filler4 : Square
                 (swap φ ψ (β * α))
                 (swap φ ψ (α * β))
                 (sym (cong (λ γ → φ *ᶠ ψ *ᶠ γ) (*-comm α β)))
                 (sym (cong (λ γ → ψ *ᶠ φ *ᶠ γ) (*-comm α β)))
-              square4 = symP (swap-natural φ ψ (*-comm α β))
+              filler4 = symP (swap-natural φ ψ (*-comm α β))
 
-              square5 : Square
+              filler5 : Square
                 (swap φ ψ (α * β))
                 (sym (swap ψ φ (α * β)))
                 refl
                 refl
-              square5 = invol φ ψ (α * β)
+              filler5 = invol φ ψ (α * β)
 
-              square6 : Square
+              filler6 : Square
                 (cong (ψ *ᶠ_) (shift φ β α))
                 (cong (ψ *ᶠ_) (cong (φ *ᶠ_) (*-comm α β) ∙ shift φ β α))
                 (sym (cong (λ γ → ψ *ᶠ φ *ᶠ γ) (*-comm α β)))
                 refl
-              square6 = compPath-filler' _ _ ▷ sym (cong-∙ (ψ *ᶠ_) _ _)
+              filler6 = compPath-filler' _ _ ▷ sym (cong-∙ (ψ *ᶠ_) _ _)
 
-              square7 : Square
+              filler7 : Square
                 (cong (ψ *ᶠ_) (cong (φ *ᶠ_) (*-comm α β) ∙ shift φ β α))
                 (sym (cong (ψ *ᶠ_) (*-comm β (φ *ᶠ α))))
                 refl
                 refl
-              square7 = cong (cong (ψ *ᶠ_)) ih'
+              filler7 = cong (cong (ψ *ᶠ_)) ih'
 
-              square8 : Square
+              filler8 : Square
                 (sym (cong (φ *ᶠ_) (shift ψ α β))
                     ∙ sym (swap ψ φ (α * β))
                     ∙ sym (cong (ψ *ᶠ_) (*-comm β (φ *ᶠ α))))
@@ -463,12 +573,12 @@ shift-hexagon φ ψ =
                       ∙ cong (φ *ᶠ_) (shift ψ α β)))
                 refl
                 refl
-              square8 =
+              filler8 =
                 cong (sym (cong (φ *ᶠ_) (shift ψ α β)) ∙_) (sym (symDistr _ _))
                   ∙∙ sym (symDistr _ _)
                   ∙∙ cong sym (sym (assoc _ _ _))
 
-              square9 : Square
+              filler9 : Square
                 (cong (φ *ᶠ_) (*-comm α (ψ *ᶠ β))
                   ∙ swap φ ψ (β * α)
                   ∙ cong (ψ *ᶠ_) (shift φ β α))
@@ -478,9 +588,186 @@ shift-hexagon φ ψ =
                       ∙ cong (φ *ᶠ_) (shift ψ α β)))
                 refl
                 refl
-              square9 =
-                ((square1 ◁ square2)
-                  ∙₂ (square3 ◁v (square4 ▷ square5) ▷ refl)
-                  ∙₂ (square6 ▷ square7))
-                  ∙ square8
-           in square9))
+              filler9 =
+                ((filler1 ◁ filler2)
+                  ∙₂ (filler3 ◁v (filler4 ▷ filler5) ▷ refl)
+                  ∙₂ (filler6 ▷ filler7))
+                  ∙ filler8
+           in filler9))
+
+⇒-*-identityˡ : (α β : NF n) →
+  Square
+    (cong (_* (α ⇒ β)) (⇒-annihilʳ α))
+    (cong (α ⇒_) (*-identityˡ β))
+    (sym (⇒-distribˡ α ⊤ β))
+    (*-identityˡ (α ⇒ β))
+⇒-*-identityˡ α β = refl
+
+⇒-*-identityʳ : (α β : NF n) →
+  Square
+    (cong ((α ⇒ β) *_) (⇒-annihilʳ α))
+    (cong (α ⇒_) (*-identityʳ β))
+    (sym (⇒-distribˡ α β ⊤))
+    (*-identityʳ (α ⇒ β))
+⇒-*-identityʳ α =
+  elimPropNF
+    (λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    refl
+    (λ φ ih → congP (λ _ → cong ((α ⇒ᶠ φ) *ᶠ_)) ih)
+
+-- ⇒-*-comm : (α β γ : NF n) →
+--   Square
+--     (cong (α ⇒_) (*-comm β γ))
+--     (*-comm (α ⇒ β) (α ⇒ γ))
+--     (⇒-distribˡ α β γ)
+--     (⇒-distribˡ α γ β)
+-- ⇒-*-comm α β γ = {!   !}
+
+⇒-*-assoc : (α β γ δ : NF n) →
+  Square
+    (⇒-distribˡ α (β * γ) δ ∙ cong (_* (α ⇒ δ)) (⇒-distribˡ α β γ))
+    (⇒-distribˡ α β (γ * δ) ∙ cong ((α ⇒ β) *_) (⇒-distribˡ α γ δ))
+    (cong (α ⇒_) (*-assoc β γ δ))
+    (*-assoc (α ⇒ β) (α ⇒ γ) (α ⇒ δ))
+⇒-*-assoc α =
+  elimPropNF
+    (λ _ → isPropΠ2 λ _ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    (λ γ δ → sym (rUnit _) ∙ lUnit _)
+    (λ φ {β} ih γ δ →
+      let filler0 : Square
+            (cong ((α ⇒ᶠ φ) *ᶠ_)
+              (⇒-distribˡ α (β * γ) δ
+                ∙ cong (_* (α ⇒ δ)) (⇒-distribˡ α β γ)))
+            (cong ((α ⇒ᶠ φ) *ᶠ_)
+              (⇒-distribˡ α β (γ * δ)
+                ∙ cong ((α ⇒ β) *_) (⇒-distribˡ α γ δ)))
+            (cong (λ ε → (α ⇒ᶠ φ) *ᶠ (α ⇒ ε)) (*-assoc β γ δ))
+            (cong ((α ⇒ᶠ φ) *ᶠ_) (*-assoc (α ⇒ β) (α ⇒ γ) (α ⇒ δ)))
+          filler0 = congP (λ _ → cong ((α ⇒ᶠ φ) *ᶠ_)) (ih γ δ)
+
+          filler1 : Square
+            (cong ((α ⇒ᶠ φ) *ᶠ_) (⇒-distribˡ α (β * γ) δ)
+              ∙ cong (λ ε → (α ⇒ᶠ φ) *ᶠ ε * (α ⇒ δ)) (⇒-distribˡ α β γ))
+            (cong ((α ⇒ᶠ φ) *ᶠ_)
+              (⇒-distribˡ α (β * γ) δ
+                ∙ cong (_* (α ⇒ δ)) (⇒-distribˡ α β γ)))
+            refl
+            refl
+          filler1 = sym (cong-∙ ((α ⇒ᶠ φ) *ᶠ_) _ _)
+
+          filler2 : Square
+            (cong ((α ⇒ᶠ φ) *ᶠ_)
+              (⇒-distribˡ α β (γ * δ)
+                ∙ cong ((α ⇒ β) *_) (⇒-distribˡ α γ δ)))
+            (cong ((α ⇒ᶠ φ) *ᶠ_) (⇒-distribˡ α β (γ * δ))
+              ∙ cong (λ ε → (α ⇒ᶠ φ) *ᶠ (α ⇒ β) * ε) (⇒-distribˡ α γ δ))
+            refl
+            refl
+          filler2 = cong-∙ ((α ⇒ᶠ φ) *ᶠ_) _ _
+
+          goal : Square
+            (cong ((α ⇒ᶠ φ) *ᶠ_) (⇒-distribˡ α (β * γ) δ)
+              ∙ cong (λ ε → (α ⇒ᶠ φ) *ᶠ ε * (α ⇒ δ)) (⇒-distribˡ α β γ))
+            (cong ((α ⇒ᶠ φ) *ᶠ_) (⇒-distribˡ α β (γ * δ))
+              ∙ cong (λ ε → (α ⇒ᶠ φ) *ᶠ (α ⇒ β) * ε) (⇒-distribˡ α γ δ))
+            (cong (λ ε → (α ⇒ᶠ φ) *ᶠ (α ⇒ ε)) (*-assoc β γ δ))
+            (cong ((α ⇒ᶠ φ) *ᶠ_) (*-assoc (α ⇒ β) (α ⇒ γ) (α ⇒ δ)))
+          goal = filler1 ◁ filler0 ▷ filler2
+       in goal)
+
+⇒ᶠ-curry-identityˡ : (α : NF n) (φ : Factor n) →
+  Square
+    (⇒ᶠ-identityˡ (α ⇒ᶠ φ))
+    (sym (cong (_⇒ᶠ φ) (*-identityˡ α)))
+    refl
+    (⇒ᶠ-curry ⊤ α φ)
+⇒ᶠ-curry-identityˡ α (β ⇒ι x) = refl
+
+⇒-curry-identityˡ : (α β : NF n) →
+  Square
+    (⇒-identityˡ (α ⇒ β))
+    (sym (cong (_⇒ β) (*-identityˡ α)))
+    refl
+    (⇒-curry ⊤ α β)
+⇒-curry-identityˡ α =
+  elimPropNF
+    (λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    refl
+    (λ φ ih → congP₂ (λ _ p q → cong₂ _*ᶠ_ p q) (⇒ᶠ-curry-identityˡ α φ) ih)
+
+*-identityʳ-assoc-agree : (α β : NF n) →
+  cong (_* β) (*-identityʳ α) ≡ *-assoc α ⊤ β
+*-identityʳ-assoc-agree =
+  elimPropNF
+    (λ _ → isPropΠ λ _ → trunc _ _ _ _)
+    (λ _ → refl)
+    (λ φ ih β → congP (λ _ → cong (φ *ᶠ_)) (ih β))
+
+⇒ᶠ-curry-identityʳ : (α : NF n) (φ : Factor n) →
+  Square
+    (cong (α ⇒ᶠ_) (⇒ᶠ-identityˡ φ))
+    (sym (cong (_⇒ᶠ φ) (*-identityʳ α)))
+    refl
+    (⇒ᶠ-curry α ⊤ φ)
+⇒ᶠ-curry-identityʳ α (β ⇒ι x) =
+  congP (λ _ → cong (_⇒ι x))
+    (elimPropNF
+      {B = λ γ → Square
+        refl
+        (sym (cong (_* β) (*-identityʳ γ)))
+        refl
+        (sym (*-assoc γ ⊤ β))}
+      (λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+      refl
+      (λ φ ih → congP (λ _ → cong (φ *ᶠ_)) ih)
+      α)
+
+⇒-curry-identityʳ : (α β : NF n) →
+  Square
+    (cong (α ⇒_) (⇒-identityˡ β))
+    (sym (cong (_⇒ β) (*-identityʳ α)))
+    refl
+    (⇒-curry α ⊤ β)
+⇒-curry-identityʳ α =
+  elimPropNF
+    (λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    refl
+    (λ φ ih → congP₂ (λ _ p q → cong₂ _*ᶠ_ p q) (⇒ᶠ-curry-identityʳ α φ) ih)
+
+-- *-pentagon : (α β γ δ : NF n) →
+--   Path (((α * β) * γ) * δ ≡ α * (β * (γ * δ)))
+--     (*-assoc (α * β) γ δ ∙ *-assoc α β (γ * δ))
+--     (cong (_* δ) (*-assoc α β γ) ∙∙ *-assoc α (β * γ) δ ∙∙ cong (α *_) (*-assoc β γ δ))
+-- *-assoc-agree : (α β γ δ : NF n) →
+--   Square
+--     (*-assoc (α * β) γ δ ∙ *-assoc α β (γ * δ))
+--     (*-assoc α (β * γ) δ ∙ cong (α *_) (*-assoc β γ δ))
+--     (cong (_* δ) (*-assoc α β γ))
+--     refl
+-- *-assoc-agree = {!   !}
+
+-- ⇒ᶠ-curry-assoc : (α β γ : NF n) (φ : Factor n) →
+--   Square
+--     (⇒ᶠ-curry α β (γ ⇒ᶠ φ) ∙ ⇒ᶠ-curry (α * β) γ φ)
+--     (cong (α ⇒ᶠ_) (⇒ᶠ-curry β γ φ) ∙ ⇒ᶠ-curry α (β * γ) φ)
+--     refl
+--     (cong (_⇒ᶠ φ) (*-assoc α β γ))
+-- ⇒ᶠ-curry-assoc α β γ (δ ⇒ι x) =
+--   sym (cong-∙ (_⇒ι x) (sym (*-assoc α β (γ * δ))) (sym (*-assoc (α * β) γ δ)))
+--     ◁ congP (λ _ → cong (_⇒ι x)) {!   !} ▷
+--     cong-∙ (_⇒ι x) (sym (cong (α *_) (*-assoc β γ δ))) (sym (*-assoc α (β * γ) δ))
+
+-- ⇒-curry-assoc : (α β γ δ : NF n) →
+--   Square
+--     (⇒-curry α β (γ ⇒ δ) ∙ ⇒-curry (α * β) γ δ)
+--     (cong (α ⇒_) (⇒-curry β γ δ) ∙ ⇒-curry α (β * γ) δ)
+--     refl
+--     (cong (_⇒ δ) (*-assoc α β γ))
+-- ⇒-curry-assoc α β γ =
+--   elimPropNF
+--     (λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+--     refl
+--     (λ φ ih →
+--       sym (cong₂-∙ _*ᶠ_ _ _ _ _)
+--       ◁ congP₂ (λ _ → congP₂ λ _ → _*ᶠ_) (⇒ᶠ-curry-assoc α β γ φ) ih ▷
+--       cong₂-∙ _*ᶠ_ _ _ _ _)

@@ -44,6 +44,15 @@ data NF n where
   -- only groupoid truncate to allow interpretation into hSet
   trunc : ∀ α β (p q : α ≡ β) (P Q : p ≡ q) → P ≡ Q
 
+ι : Fin n → NF n
+ι x = (⊤ ⇒ι x) *ᶠ ⊤
+
+domain : Factor n → NF n
+domain (α ⇒ι x) = α
+
+codomain : Factor n → Fin n
+codomain (α ⇒ι x) = x
+
 --------------------------------------------------------------------------------
 -- Eliminators for NF
 
@@ -239,7 +248,7 @@ record Model ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
         (cong (ε *ᴹ_) (swapᴹ φ ψ α)
           ∙∙ swapᴹ ε ψ (φ *ᴹ α)
           ∙∙ cong (ψ *ᴹ_) (swapᴹ ε φ α))
-    truncNFᴹ : isGroupoid (NFᴹ n)
+    isGroupoidNFᴹ : isGroupoid (NFᴹ n)
 
 module Rec {ℓ ℓ'} (M : Model ℓ ℓ') where
   open Model M
@@ -259,20 +268,21 @@ module Rec {ℓ ℓ'} (M : Model ℓ ℓ') where
       ∙∙ sym (doubleCompPathP≡doubleCompPath _ _ _))
     i j
   ⟦ trunc α β p q P Q i j k ⟧ⁿ =
-    truncNFᴹ
+    isGroupoidNFᴹ
       ⟦ α ⟧ⁿ ⟦ β ⟧ⁿ
       (λ i → ⟦ p i ⟧ⁿ) (λ i → ⟦ q i ⟧ⁿ)
       (λ i j → ⟦ P i j ⟧ⁿ) (λ i j → ⟦ Q i j ⟧ⁿ)
       i j k
 
 
-record ModelDep ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+record ModelDepSet ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   no-eta-equality
   infixr 5 _⇒ιᴹ_
   infixr 6 _*ᴹ_
   field
     Factorᴹ : Factor n → Type ℓ
     NFᴹ : NF n → Type ℓ'
+    isSetNFᴹ : (α : NF n) → isSet (NFᴹ α)
 
     _⇒ιᴹ_ : {α : NF n} → NFᴹ α → (x : Fin n) → Factorᴹ (α ⇒ι x)
 
@@ -283,30 +293,49 @@ record ModelDep ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
       PathP (λ i → NFᴹ (swap φ ψ α i))
         (φᴹ *ᴹ ψᴹ *ᴹ αᴹ)
         (ψᴹ *ᴹ φᴹ *ᴹ αᴹ)
-    involᴹ : {φ ψ : Factor n} {α : NF n} →
-      (φᴹ : Factorᴹ φ) (ψᴹ : Factorᴹ ψ) (αᴹ : NFᴹ α) →
-      SquareP (λ i j → NFᴹ (invol φ ψ α i j))
-        (swapᴹ φᴹ ψᴹ αᴹ)
-        (symP (swapᴹ ψᴹ φᴹ αᴹ))
-        refl
-        refl
-    hexagonᴹ : {ε φ ψ : Factor n} {α : NF n} →
-      (εᴹ : Factorᴹ ε) (φᴹ : Factorᴹ φ) (ψᴹ : Factorᴹ ψ) (αᴹ : NFᴹ α) →
-      SquareP (λ i j → NFᴹ (hexagon ε φ ψ α i j))
-        (doubleCompPathP {B = NFᴹ}
-          (swapᴹ εᴹ φᴹ (ψᴹ *ᴹ αᴹ))
-          (congP (λ _ → φᴹ *ᴹ_) (swapᴹ εᴹ ψᴹ αᴹ))
-          (swapᴹ φᴹ ψᴹ (εᴹ *ᴹ αᴹ)))
-        (doubleCompPathP {B = NFᴹ}
-          (congP (λ _ → εᴹ *ᴹ_) (swapᴹ φᴹ ψᴹ αᴹ))
-          (swapᴹ εᴹ ψᴹ (φᴹ *ᴹ αᴹ))
-          (congP (λ _ → ψᴹ *ᴹ_) (swapᴹ εᴹ φᴹ αᴹ)))
-        refl
-        refl
-    truncNFᴹ : (α : NF n) → isGroupoid (NFᴹ α)
 
-module Elim {ℓ ℓ'} (M : ModelDep ℓ ℓ') where
-  open ModelDep M
+  involᴹ : {φ ψ : Factor n} {α : NF n} →
+    (φᴹ : Factorᴹ φ) (ψᴹ : Factorᴹ ψ) (αᴹ : NFᴹ α) →
+    SquareP (λ i j → NFᴹ (invol φ ψ α i j))
+      (swapᴹ φᴹ ψᴹ αᴹ)
+      (symP (swapᴹ ψᴹ φᴹ αᴹ))
+      refl
+      refl
+  involᴹ {φ = φ} {ψ = ψ} {α = α} φᴹ ψᴹ αᴹ =
+    isSet→SquareP (λ i j → isSetNFᴹ (invol φ ψ α i j))
+      (swapᴹ φᴹ ψᴹ αᴹ)
+      (symP (swapᴹ ψᴹ φᴹ αᴹ))
+      refl
+      refl
+
+  hexagonᴹ : {ε φ ψ : Factor n} {α : NF n} →
+    (εᴹ : Factorᴹ ε) (φᴹ : Factorᴹ φ) (ψᴹ : Factorᴹ ψ) (αᴹ : NFᴹ α) →
+    SquareP (λ i j → NFᴹ (hexagon ε φ ψ α i j))
+      (doubleCompPathP {B = NFᴹ}
+        (swapᴹ εᴹ φᴹ (ψᴹ *ᴹ αᴹ))
+        (congP (λ _ → φᴹ *ᴹ_) (swapᴹ εᴹ ψᴹ αᴹ))
+        (swapᴹ φᴹ ψᴹ (εᴹ *ᴹ αᴹ)))
+      (doubleCompPathP {B = NFᴹ}
+        (congP (λ _ → εᴹ *ᴹ_) (swapᴹ φᴹ ψᴹ αᴹ))
+        (swapᴹ εᴹ ψᴹ (φᴹ *ᴹ αᴹ))
+        (congP (λ _ → ψᴹ *ᴹ_) (swapᴹ εᴹ φᴹ αᴹ)))
+      refl
+      refl
+  hexagonᴹ {ε = ε} {φ = φ} {ψ = ψ} {α = α} εᴹ φᴹ ψᴹ αᴹ =
+    isSet→SquareP (λ i j → isSetNFᴹ (hexagon ε φ ψ α i j))
+      (doubleCompPathP {B = NFᴹ}
+        (swapᴹ εᴹ φᴹ (ψᴹ *ᴹ αᴹ))
+        (congP (λ _ → φᴹ *ᴹ_) (swapᴹ εᴹ ψᴹ αᴹ))
+        (swapᴹ φᴹ ψᴹ (εᴹ *ᴹ αᴹ)))
+      (doubleCompPathP {B = NFᴹ}
+        (congP (λ _ → εᴹ *ᴹ_) (swapᴹ φᴹ ψᴹ αᴹ))
+        (swapᴹ εᴹ ψᴹ (φᴹ *ᴹ αᴹ))
+        (congP (λ _ → ψᴹ *ᴹ_) (swapᴹ εᴹ φᴹ αᴹ)))
+      refl
+      refl
+
+module ElimSet {ℓ ℓ'} (M : ModelDepSet ℓ ℓ') where
+  open ModelDepSet M
 
   ⟦_⟧ᶠ : (α : Factor n) → Factorᴹ α
   ⟦_⟧ⁿ : (α : NF n) → NFᴹ α
@@ -326,5 +355,42 @@ module Elim {ℓ ℓ'} (M : ModelDep ℓ ℓ') where
       (λ i k → ⟦ q k ⟧ⁿ)
       (λ i j → ⟦ α ⟧ⁿ)
       (λ i j → ⟦ β ⟧ⁿ)
-      (truncNFᴹ _)
+      (isSet→isGroupoid (isSetNFᴹ _))
       i j k
+
+
+record ModelDepProp ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+  no-eta-equality
+  infixr 5 _⇒ιᴹ_
+  infixr 6 _*ᴹ_
+  field
+    Factorᴹ : Factor n → Type ℓ
+    NFᴹ : NF n → Type ℓ'
+    isPropNFᴹ : (α : NF n) → isProp (NFᴹ α)
+
+    _⇒ιᴹ_ : {α : NF n} → NFᴹ α → (x : Fin n) → Factorᴹ (α ⇒ι x)
+
+    ⊤ᴹ : NFᴹ {n = n} ⊤
+    _*ᴹ_ : {φ : Factor n} {α : NF n} → Factorᴹ φ → NFᴹ α → NFᴹ (φ *ᶠ α)
+
+  swapᴹ : {φ ψ : Factor n} {α : NF n} →
+    (φᴹ : Factorᴹ φ) (ψᴹ : Factorᴹ ψ) (αᴹ : NFᴹ α) →
+    PathP (λ i → NFᴹ (swap φ ψ α i))
+      (φᴹ *ᴹ ψᴹ *ᴹ αᴹ)
+      (ψᴹ *ᴹ φᴹ *ᴹ αᴹ)
+  swapᴹ {φ = φ} {ψ = ψ} {α = α} φᴹ ψᴹ αᴹ =
+    isProp→PathP
+      (λ i → isPropNFᴹ (swap φ ψ α i))
+      (φᴹ *ᴹ ψᴹ *ᴹ αᴹ)
+      (ψᴹ *ᴹ φᴹ *ᴹ αᴹ)
+
+  modelDepSet : ModelDepSet ℓ ℓ'
+  modelDepSet .ModelDepSet.Factorᴹ = Factorᴹ
+  modelDepSet .ModelDepSet.NFᴹ = NFᴹ
+  modelDepSet .ModelDepSet.isSetNFᴹ α = isProp→isSet (isPropNFᴹ α)
+  modelDepSet .ModelDepSet._⇒ιᴹ_ = _⇒ιᴹ_
+  modelDepSet .ModelDepSet.⊤ᴹ = ⊤ᴹ
+  modelDepSet .ModelDepSet._*ᴹ_ = _*ᴹ_
+  modelDepSet .ModelDepSet.swapᴹ = swapᴹ
+
+module ElimProp {ℓ ℓ'} (M : ModelDepProp ℓ ℓ') = ElimSet (ModelDepProp.modelDepSet M)

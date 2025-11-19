@@ -6,9 +6,9 @@ open import Cubical.Foundations.Equiv using
 open import Cubical.Foundations.HLevels using
   (HLevel; TypeOfHLevel; hSet; isPropIsOfHLevel; TypeOfHLevel≡;
     isSet→SquareP; isSet×; isSet→; isGroupoidHSet; isGroupoidΠ)
-open import Cubical.Foundations.Isomorphism using (Iso; iso)
 open import Cubical.Foundations.GroupoidLaws using (lUnit)
 open import Cubical.Foundations.GroupoidLaws using (cong-∙∙)
+open import Cubical.Foundations.Isomorphism using (Iso; iso)
 open import Cubical.Foundations.Univalence using
   (ua; uaIdEquiv; uaInvEquiv; EquivJ)
 open import Cubical.Data.Fin.Recursive.Base using (Fin)
@@ -141,8 +141,7 @@ _→ˢ_ : (A : hSet a) (B : hSet b) → hSet (ℓ-max a b)
 (A , ASet) →ˢ (B , BSet) = (A → B) , isSet→ BSet
 
 -- This opaque is essential for performance
--- With opaque it takes only 20ms to check ⟦_⟧ⁿ, while it takes
--- indefinitely and eats up CPU/RAM like crazy without opaque!!
+-- With opaque it takes only 17ms to check SetModel, while without it takes indefinitely!
 opaque
 
   ×ˢ-swap : (A : hSet a) (B : hSet b) (C : hSet c) →
@@ -177,6 +176,6 @@ module _ {ℓ} where
   SetModel .swapᴹ A B C i ρ = ×ˢ-swap (A ρ) (B ρ) (C ρ) i
   SetModel .involᴹ A B C i j ρ = ×ˢ-invol (A ρ) (B ρ) (C ρ) i j
   SetModel .hexagonᴹ A B C D i j ρ = ×ˢ-hexagon (A ρ) (B ρ) (C ρ) (D ρ) i j
-  SetModel .truncNFᴹ = isGroupoidΠ λ _ → isGroupoidHSet
+  SetModel .isGroupoidNFᴹ = isGroupoidΠ λ _ → isGroupoidHSet
 
   open Rec SetModel using (⟦_⟧ᶠ; ⟦_⟧ⁿ) public
