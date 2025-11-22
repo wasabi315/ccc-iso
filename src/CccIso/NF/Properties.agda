@@ -1,18 +1,22 @@
 module CccIso.NF.Properties where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Foundations.GroupoidLaws using
   (cong-∙; cong-∙∙; doubleCompPath-elim; doubleCompPath-elim';
     assoc; rUnit; lUnit; symDistr)
 open import Cubical.Foundations.HLevels using
   (isPropΠ; isPropΠ2; isPropΠ3; isSetΠ; isSetΠ2; isGroupoid×;
-    isOfHLevelPathP'; isGroupoidRetract; isSet→isGroupoid)
+    isOfHLevelPathP'; isGroupoidRetract; isSet→isGroupoid; hProp; isSetHProp)
 open import Cubical.Foundations.Path using
   (flipSquare; compPath→Square; Square→compPath; _∙v_)
+open import Cubical.Data.Empty using (⊥; isProp⊥)
 open import Cubical.Data.Fin.Recursive.Base using (Fin)
 open import Cubical.Data.Fin.Recursive.Properties using (isSetFin)
 open import Cubical.Data.Nat.Base using (ℕ)
 open import Cubical.Data.Sigma.Base using (_×_; _,_)
+open import Cubical.Data.Unit using (Unit; tt; isPropUnit)
+open import Cubical.Relation.Nullary using (¬_)
 
 open import CccIso.NF
 
@@ -92,6 +96,17 @@ isGroupoidFactor {n = n} =
     ×→Factor
     Factor→×→Factor
     (isGroupoid× trunc (isSet→isGroupoid isSetFin))
+
+φ*α≢⊤ : {φ : Factor n} {α : NF n} → ¬ φ *ᶠ α ≡ ⊤
+φ*α≢⊤ φα≡⊤ = subst (fst ∘ f) φα≡⊤ tt
+  where
+    f : NF n → hProp ℓ-zero
+    f =
+      elimSetNF
+        (λ _ → isSetHProp)
+        (⊥ , isProp⊥)
+        (λ _ _ → Unit , isPropUnit)
+        (λ _ _ _ → refl)
 
 -- swap is natural
 swap-natural : (φ ψ : Factor n) {α β : NF n} (p : α ≡ β) →

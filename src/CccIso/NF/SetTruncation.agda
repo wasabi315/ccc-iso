@@ -1,22 +1,23 @@
-module CccIso.NF.ListPermutation where
+module CccIso.NF.SetTruncation where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
-open import Cubical.Foundations.HLevels using (isProp→; isSet→; isPropΠ2)
+open import Cubical.Foundations.HLevels using (hProp; isSetHProp; isProp→; isSet→; isPropΠ2)
 open import Cubical.Foundations.Isomorphism using
   (Iso; iso; isoToEquiv; isoToPath; transportIsoToPath; transportIsoToPath⁻)
 open import Cubical.Foundations.Univalence using (ua; uaβ; ~uaβ)
-open import Cubical.Data.Empty as ⊥ using (⊥*)
+open import Cubical.Data.Empty as ⊥ using (⊥; ⊥*; isProp⊥)
 open import Cubical.Data.List as List using (List; []; _∷_; _++_; module ListPath)
 open import Cubical.Data.Nat.Base using (ℕ)
 open import Cubical.Data.Sigma using (Σ-syntax; ∃-syntax; _×_; _,_)
 open import Cubical.Data.Sum using (_⊎_; inl; inr)
-open import Cubical.Data.Unit using (Unit*; tt*)
+open import Cubical.Data.Unit using (Unit*; tt*; Unit; tt; isPropUnit)
 open import Cubical.HITs.FiniteMultiset as FMSet using (FMSet; []; _∷_; comm; trunc)
 open import Cubical.HITs.PropositionalTruncation as PT using (∥_∥₁; ∣_∣₁; squash₁)
+import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 open import Cubical.HITs.SetTruncation as ST using (∥_∥₂; ∣_∣₂; squash₂)
 open import Cubical.HITs.SetQuotients as SQ using (_/_; [_]; eq/; squash/)
-open import Cubical.HITs.Truncation using (∣_∣; PathIdTruncIso; propTruncTrunc1Iso; propTrunc≡Trunc2)
+open import Cubical.HITs.Truncation using (∣_∣; PathIdTruncIso; propTruncTrunc1Iso; setTruncTrunc2Iso)
 open import Cubical.Relation.Binary using (module BinaryRelation)
 open import Cubical.Relation.Nullary using (¬_)
 
@@ -35,9 +36,22 @@ infix  4 _∣↭∣_
 infixr 5 _∷↭_ _∣*ᶠ∣_
 
 --------------------------------------------------------------------------------
--- Permutation relation
--- Ref: https://github.com/agda/agda-stdlib/blob/master/src/Data/List/Relation/Binary/Permutation/Setoid/Properties.agda
 
+pattern ∣⊤∣ = ∣ ⊤ ∣₂
+
+_∣*ᶠ∣_ : Factor n → ∥ NF n ∥₂ → ∥ NF n ∥₂
+_∣*ᶠ∣_ φ = ST.map (φ *ᶠ_)
+
+∣swap∣ : (φ ψ : Factor n) (α : ∥ NF n ∥₂) →
+  φ ∣*ᶠ∣ ψ ∣*ᶠ∣ α ≡ ψ ∣*ᶠ∣ φ ∣*ᶠ∣ α
+∣swap∣ φ ψ =
+  ST.elim (λ _ → isProp→isSet (squash₂ _ _)) (cong ∣_∣₂ ∘ swap φ ψ)
+
+--------------------------------------------------------------------------------
+-- Isomorphism between ∥ NF n ∥₂ and List↭ (Factor n)
+
+-- Permutation relation and its properties
+-- Ref: https://github.com/agda/agda-stdlib/blob/master/src/Data/List/Relation/Binary/Permutation/Setoid/Properties.agda
 module _ {A : Type ℓ} where
   infix  4 _↭_ _↭′_ _↭″_
   infixr 5 _↭-∷_
@@ -174,7 +188,6 @@ module _ {A : Type ℓ} where
           ↭-trans (↭-reflexive eq') (↭-sym (↭-shift refl ps qs)) ,
           subst (λ y → y ∷ ps ++ qs ↭ ys) (sym eq) q
 
---------------------------------------------------------------------------------
 -- Quotient of lists up to permutation
 
 _∣↭∣_ : {A : Type ℓ} → List A → List A → Type ℓ
@@ -232,24 +245,13 @@ different-head↭ x y =
            in [ zs ] , eq/ _ _ ∣ q ∣₁ , eq/ _ _ ∣ r ∣₁)
         ∘ reify↭)
 
---------------------------------------------------------------------------------
--- ∥ NF n ∥₂ ≃ List↭ (Factor n)
+-- Iso ∥ NF n ∥₂ ≃ List↭ (Factor n)
 
 NF→List↭ : NF n → List↭ (Factor n)
 NF→List↭ = recSetNF squash/ []↭ _∷↭_ swap↭
 
 ∥NF∥₂→List↭ : ∥ NF n ∥₂ → List↭ (Factor n)
 ∥NF∥₂→List↭ = ST.rec squash/ NF→List↭
-
-pattern ∣⊤∣ = ∣ ⊤ ∣₂
-
-_∣*ᶠ∣_ : Factor n → ∥ NF n ∥₂ → ∥ NF n ∥₂
-_∣*ᶠ∣_ φ = ST.map (φ *ᶠ_)
-
-∣swap∣ : (φ ψ : Factor n) (α : ∥ NF n ∥₂) →
-  φ ∣*ᶠ∣ ψ ∣*ᶠ∣ α ≡ ψ ∣*ᶠ∣ φ ∣*ᶠ∣ α
-∣swap∣ φ ψ =
-  ST.elim (λ _ → isProp→isSet (squash₂ _ _)) (cong ∣_∣₂ ∘ swap φ ψ)
 
 List→∥NF∥₂ : List (Factor n) → ∥ NF n ∥₂
 List→∥NF∥₂ = List.foldr _∣*ᶠ∣_ ∣⊤∣
@@ -307,9 +309,6 @@ retract = ST.elim (λ _ → isProp→isSet (squash₂ _ _)) retract'
 ∥NF∥₂≡List↭ : ∥ NF n ∥₂ ≡ List↭ (Factor n)
 ∥NF∥₂≡List↭ = isoToPath ∥NF∥₂IsoList↭
 
---------------------------------------------------------------------------------
--- Transport lemmas along the isomorphism
-
 consPath :
   PathP
     (λ i → Factor n → ∥NF∥₂≡List↭ {n} i → ∥NF∥₂≡List↭ {n} i)
@@ -337,6 +336,9 @@ consPath {n} = funExt λ φ → toPathP (funExt λ α →
     φ ∷↭ α
   ∎)
 
+--------------------------------------------------------------------------------
+-- Transport lemmas along the isomorphism
+
 drop-∷' : (φ : Factor n) (α β : ∥ NF n ∥₂) → φ ∣*ᶠ∣ α ≡ φ ∣*ᶠ∣ β → α ≡ β
 drop-∷' {n = n} =
   transport
@@ -356,48 +358,38 @@ different-head' {n = n} =
       (φ ψ : Factor n) (α β : ∥NF∥₂≡List↭ {n} (~ i)) →
       ¬ φ ≡ ψ →
       consPath (~ i) φ α ≡ consPath (~ i) ψ β →
-      ∃[ γ ∈ ∥NF∥₂≡List↭ {n} (~ i) ]
-        (α ≡ consPath (~ i) ψ γ) × (consPath (~ i) φ γ ≡ β))
+      ∃[ γ ∈ _ ] (α ≡ consPath (~ i) ψ γ) × (consPath (~ i) φ γ ≡ β))
     different-head↭
 
 Path∥₂→∥Path∥₁ : {x y : A} → ∣ x ∣₂ ≡ ∣ y ∣₂ → ∥ x ≡ y ∥₁
 Path∥₂→∥Path∥₁ {x = x} {y = y} =
-  Iso.inv propTruncTrunc1Iso
-    ∘ Iso.fun (PathIdTruncIso 1)
-    ∘ transport
-        (cong₃
-          Path
-            propTrunc≡Trunc2
-            (toPathP (transportRefl ∣ x ∣))
-            (toPathP (transportRefl ∣ y ∣)))
+  inv propTruncTrunc1Iso
+    ∘ fun (PathIdTruncIso 1)
+    ∘ cong (fun setTruncTrunc2Iso)
 
 drop-∷ : (φ : Factor n) (α β : NF n) → ∥ φ *ᶠ α ≡ φ *ᶠ β ∥₁ → ∥ α ≡ β ∥₁
-drop-∷ φ α β =
-  PT.rec
-    squash₁
-    (Path∥₂→∥Path∥₁ ∘ drop-∷' φ ∣ α ∣₂ ∣ β ∣₂ ∘ cong ∣_∣₂)
+drop-∷ φ α β φα≡φβ = do
+  φα≡φβ ← φα≡φβ
+  Path∥₂→∥Path∥₁ (drop-∷' φ ∣ α ∣₂ ∣ β ∣₂ (cong ∣_∣₂ φα≡φβ))
+  where open PTMonad
 
 different-head : (φ ψ : Factor n) (α β : NF n)
-  → ¬ ∥ φ ≡ ψ ∥₁
+  → ¬ φ ≡ ψ
   → ∥ φ *ᶠ α ≡ ψ *ᶠ β ∥₁
   → ∃[ γ ∈ _ ] (α ≡ ψ *ᶠ γ) × (φ *ᶠ γ ≡ β)
-different-head φ ψ α β neq =
-  PT.rec
-    squash₁
-    λ φα≡ψβ →
-      PT.rec squash₁
-        (λ (γ , p , q) →
-          ST.elim
-            {B = λ γ →
-              ∣ α ∣₂ ≡ ψ ∣*ᶠ∣ γ →
-              φ ∣*ᶠ∣ γ ≡ ∣ β ∣₂ →
-              ∃[ γ ∈ _ ] (α ≡ ψ *ᶠ γ) × (φ *ᶠ γ ≡ β)}
-            (λ _ → isProp→isSet (isPropΠ2 (λ _ _ → squash₁)))
-            (λ γ p q →
-              PT.rec2
-                squash₁
-                (λ p q → ∣ γ , p , q ∣₁)
-                (Path∥₂→∥Path∥₁ p)
-                (Path∥₂→∥Path∥₁ q))
-            γ p q)
-        (different-head' φ ψ ∣ α ∣₂ ∣ β ∣₂ (neq ∘ ∣_∣₁) (cong ∣_∣₂ φα≡ψβ))
+different-head φ ψ α β φ≢ψ φα≡ψβ = do
+  φα≡ψβ ← φα≡ψβ
+  γ , p , q ← different-head' φ ψ ∣ α ∣₂ ∣ β ∣₂ φ≢ψ (cong ∣_∣₂ φα≡ψβ)
+  γ , p , q ←
+    ST.elim
+      {B = λ γ →
+        ∣ α ∣₂ ≡ ψ ∣*ᶠ∣ γ →
+        φ ∣*ᶠ∣ γ ≡ ∣ β ∣₂ →
+        ∃[ γ ∈ _ ] (∣ α ∣₂ ≡ ∣ ψ *ᶠ γ ∣₂) × (∣ φ *ᶠ γ ∣₂ ≡ ∣ β ∣₂)}
+      (λ _ → isProp→isSet (isPropΠ2 λ _ _ →  squash₁))
+      (λ γ p q → ∣ γ , p , q ∣₁)
+      γ p q
+  p ← Path∥₂→∥Path∥₁ p
+  q ← Path∥₂→∥Path∥₁ q
+  ∣ γ , p , q ∣₁
+  where open PTMonad
