@@ -200,6 +200,41 @@ module _ {n ℓ} {B : NF n → Type ℓ} (trunc* : ∀ α → isProp (B α))
           (φ ** (ψ ** α*))
           (ψ ** (φ ** α*)))
 
+
+module _ {n ℓ} {B : Type ℓ} (trunc* : isSet B)
+  (⊤* : B)
+  (_**_ : Factor n → B → B)
+  (swap* : ∀ φ ψ α* → φ ** (ψ ** α*) ≡ ψ ** (φ ** α*))
+  where
+
+  recSetNF : NF n → B
+  recSetNF ⊤ = ⊤*
+  recSetNF (φ *ᶠ α) = φ ** recSetNF α
+  recSetNF (swap φ ψ α i) = swap* φ ψ (recSetNF α) i
+  recSetNF (invol φ ψ α i j) =
+    trunc*
+      (φ ** (ψ ** recSetNF α)) (ψ ** (φ ** recSetNF α))
+      (swap* φ ψ (recSetNF α)) (sym (swap* ψ φ (recSetNF α)))
+      i j
+  recSetNF (hexagon ε φ ψ α i j) =
+    (doubleCompPathP≡doubleCompPath _ _ _
+      ∙∙ trunc*
+        (ε ** (φ ** (ψ ** recSetNF α))) (ψ ** (φ ** (ε ** recSetNF α)))
+        (swap* ε φ (ψ ** recSetNF α)
+          ∙∙ cong (φ **_) (swap* ε ψ (recSetNF α))
+          ∙∙ swap* φ ψ (ε ** recSetNF α))
+        (cong (ε **_) (swap* φ ψ (recSetNF α))
+          ∙∙ swap* ε ψ (φ ** recSetNF α)
+          ∙∙ cong (ψ **_) (swap* ε φ (recSetNF α)))
+      ∙∙ sym (doubleCompPathP≡doubleCompPath _ _ _))
+      i j
+  recSetNF (trunc α β p q P Q i j k) =
+    isSet→isGroupoid trunc*
+      (recSetNF α) (recSetNF β)
+      (λ i → recSetNF (p i)) (λ i → recSetNF (q i))
+      (λ i j → recSetNF (P i j)) (λ i j → recSetNF (Q i j))
+      i j k
+
 --------------------------------------------------------------------------------
 -- Product and exponential for NF
 
