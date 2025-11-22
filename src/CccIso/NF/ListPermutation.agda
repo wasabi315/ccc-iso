@@ -2,22 +2,23 @@ module CccIso.NF.ListPermutation where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
-open import Cubical.Foundations.HLevels using (isProp→)
+open import Cubical.Foundations.HLevels using (isProp→; isSet→; isPropΠ2)
 open import Cubical.Foundations.Isomorphism using
   (Iso; iso; isoToEquiv; isoToPath; transportIsoToPath; transportIsoToPath⁻)
 open import Cubical.Foundations.Univalence using (ua; uaβ; ~uaβ)
-open import Cubical.Data.Empty using (⊥*)
+open import Cubical.Data.Empty as ⊥ using (⊥*)
 open import Cubical.Data.List as List using (List; []; _∷_; _++_; module ListPath)
 open import Cubical.Data.Nat.Base using (ℕ)
-open import Cubical.Data.Sigma using (Σ-syntax; _×_; _,_)
+open import Cubical.Data.Sigma using (Σ-syntax; ∃-syntax; _×_; _,_)
 open import Cubical.Data.Sum using (_⊎_; inl; inr)
 open import Cubical.Data.Unit using (Unit*; tt*)
 open import Cubical.HITs.FiniteMultiset as FMSet using (FMSet; []; _∷_; comm; trunc)
 open import Cubical.HITs.PropositionalTruncation as PT using (∥_∥₁; ∣_∣₁; squash₁)
 open import Cubical.HITs.SetTruncation as ST using (∥_∥₂; ∣_∣₂; squash₂)
 open import Cubical.HITs.SetQuotients as SQ using (_/_; [_]; eq/; squash/)
-open import Cubical.HITs.Truncation using (∥_∥_; ∣_∣; ∣_∣ₕ; PathIdTrunc; propTrunc≡Trunc1; propTrunc≡Trunc2)
+open import Cubical.HITs.Truncation using (∣_∣; PathIdTruncIso; propTruncTrunc1Iso; propTrunc≡Trunc2)
 open import Cubical.Relation.Binary using (module BinaryRelation)
+open import Cubical.Relation.Nullary using (¬_)
 
 open import CccIso.NF
 
@@ -84,6 +85,9 @@ module _ {A : Type ℓ} where
   ↭-refl {xs = []} = ↭-[]
   ↭-refl {xs = x ∷ xs} = refl ↭-∷ ↭-refl
 
+  ↭-reflexive : ∀ {xs ys} → ListPath.Cover xs ys → xs ↭ ys
+  ↭-reflexive p = subst (_ ↭_) (ListPath.decode _ _ p) ↭-refl
+
   ↭-sym : ∀ {xs ys} → xs ↭ ys → ys ↭ xs
   ↭-sym (↭-trans p q) = ↭-trans (↭-sym q) (↭-sym p)
   ↭-sym {xs = []} {ys = []} ↭-[] = ↭-[]
@@ -91,62 +95,61 @@ module _ {A : Type ℓ} where
   ↭-sym {xs = x ∷ x' ∷ xs} {ys = y ∷ y' ∷ ys} (↭-swap p q r) =
     ↭-swap (sym q) (sym p) (↭-sym r)
 
-  shift : ∀ {x y} → x ≡ y → ∀ xs ys → x ∷ xs ++ ys ↭ xs ++ y ∷ ys
-  shift p [] ys = p ↭-∷ ↭-refl
-  shift p (x ∷ xs) ys =
-    ↭-trans (↭-swap refl refl ↭-refl) (refl ↭-∷ shift p xs ys)
+  ¬[]↭x∷xs : ∀ {x xs} → ¬ [] ↭ x ∷ xs
+  ¬[]↭x∷xs (↭-trans {[]} p q) = ¬[]↭x∷xs q
+  ¬[]↭x∷xs (↭-trans {_ ∷ _} p q) = ¬[]↭x∷xs p
 
-  split-helper : ∀ {x} xs ys as bs →
+  ↭-shift : ∀ {x y} → x ≡ y → ∀ xs ys → x ∷ xs ++ ys ↭ xs ++ y ∷ ys
+  ↭-shift p [] ys = p ↭-∷ ↭-refl
+  ↭-shift p (x ∷ xs) ys =
+    ↭-trans (↭-swap refl refl ↭-refl) (refl ↭-∷ ↭-shift p xs ys)
+
+  ↭-split-helper : ∀ {x} xs ys as bs →
     xs ↭ ys →
     ListPath.Cover ys (as ++ x ∷ bs) →
     Σ[ ps ∈ _ ] Σ[ qs ∈ _ ]
       ListPath.Cover xs (ps ++ x ∷ qs) × (ps ++ qs ↭ as ++ bs)
-  split-helper xs ys as bs (↭-trans p q) eq
-    using ps , qs , eq' , r ← split-helper _ ys as bs q eq
-    using ps' , qs' , eq'' , s ← split-helper xs _ ps qs p eq'
+  ↭-split-helper xs ys as bs (↭-trans p q) eq
+    using ps , qs , eq' , r ← ↭-split-helper _ ys as bs q eq
+    using ps' , qs' , eq'' , s ← ↭-split-helper xs _ ps qs p eq'
     = ps' , qs' , eq'' , ↭-trans s r
-  split-helper [] [] [] bs ↭-[] ()
-  split-helper [] [] (_ ∷ _) bs ↭-[] ()
-  split-helper (x ∷ xs) (y ∷ ys) [] bs (p ↭-∷ q) (eq , eq') =
+  ↭-split-helper [] [] [] bs ↭-[] ()
+  ↭-split-helper [] [] (_ ∷ _) bs ↭-[] ()
+  ↭-split-helper (x ∷ xs) (y ∷ ys) [] bs (p ↭-∷ q) (eq , eq') =
     [] , xs ,
     (p ∙ eq , ListPath.reflCode xs) ,
-    ↭-trans q (subst (ys ↭_) (ListPath.decode ys bs eq') ↭-refl)
-  split-helper (x ∷ xs) (y ∷ ys) (a ∷ as) bs (p ↭-∷ q) (eq , eq')
-    using ps , qs , eq' , r ← split-helper xs ys as bs q eq'
+    ↭-trans q (↭-reflexive eq')
+  ↭-split-helper (x ∷ xs) (y ∷ ys) (a ∷ as) bs (p ↭-∷ q) (eq , eq')
+    using ps , qs , eq' , r ← ↭-split-helper xs ys as bs q eq'
     = a ∷ ps , qs , (p ∙ eq , eq') , refl ↭-∷ r
-  split-helper (x ∷ y ∷ xs) (x' ∷ y' ∷ xs') [] (b ∷ _) (↭-swap p q r) (eq , eq' , eq'') =
+  ↭-split-helper (x ∷ y ∷ xs) (x' ∷ y' ∷ xs') [] (b ∷ _) (↭-swap p q r) (eq , eq' , eq'') =
     b ∷ [] , xs ,
     (p ∙ eq' , q ∙ eq , ListPath.reflCode xs) ,
-    refl ↭-∷ ↭-trans r (subst (xs' ↭_) (ListPath.decode xs' _ eq'') ↭-refl)
-  split-helper (x ∷ y ∷ xs) (x' ∷ y' ∷ xs') (a ∷ []) bs (↭-swap p q r) (eq , eq' , eq'') =
+    refl ↭-∷ ↭-trans r (↭-reflexive eq'')
+  ↭-split-helper (x ∷ y ∷ xs) (x' ∷ y' ∷ xs') (a ∷ []) bs (↭-swap p q r) (eq , eq' , eq'') =
     [] , a ∷ xs ,
     (p ∙ eq' , q ∙ eq , ListPath.reflCode xs) ,
-    refl ↭-∷ ↭-trans r (subst (xs' ↭_) (ListPath.decode xs' _ eq'') ↭-refl)
-  split-helper (x ∷ y ∷ xs) (x' ∷ y' ∷ xs') (a ∷ b ∷ as) bs (↭-swap p q r) (eq , eq' , eq'')
-    using ps , qs , eq''' , s ← split-helper xs xs' as bs r eq''
+    refl ↭-∷ ↭-trans r (↭-reflexive eq'')
+  ↭-split-helper (x ∷ y ∷ xs) (x' ∷ y' ∷ xs') (a ∷ b ∷ as) bs (↭-swap p q r) (eq , eq' , eq'')
+    using ps , qs , eq''' , s ← ↭-split-helper xs xs' as bs r eq''
     = b ∷ a ∷ ps , qs ,
       (p ∙ eq' , q ∙ eq , eq''') ,
       ↭-swap refl refl s
 
-  split : ∀ {x xs ys zs} → xs ↭ (ys ++ x ∷ zs) →
+  ↭-split : ∀ {x xs ys zs} → xs ↭ (ys ++ x ∷ zs) →
     Σ[ ps ∈ _ ] Σ[ qs ∈ _ ]
       ListPath.Cover xs (ps ++ x ∷ qs) × (ps ++ qs ↭ ys ++ zs)
-  split {x = x} {xs = xs} {ys = ys} {zs = zs} p =
-    split-helper xs (ys ++ x ∷ zs) ys zs p (ListPath.reflCode _)
+  ↭-split {x = x} {xs = xs} {ys = ys} {zs = zs} p =
+    ↭-split-helper xs (ys ++ x ∷ zs) ys zs p (ListPath.reflCode _)
 
   ↭-dropMiddleElement-Cover : ∀ {x} ws xs {ys zs} →
     ListPath.Cover (ws ++ x ∷ ys) (xs ++ x ∷ zs) →
     ws ++ ys ↭ xs ++ zs
-  ↭-dropMiddleElement-Cover [] [] (_ , eq) =
-    subst (_ ↭_) (ListPath.decode _ _ eq) ↭-refl
+  ↭-dropMiddleElement-Cover [] [] (_ , eq) = ↭-reflexive eq
   ↭-dropMiddleElement-Cover [] (x ∷ xs) (eq , eq') =
-    ↭-trans
-      (subst (_ ↭_) (ListPath.decode _ _ eq') ↭-refl)
-      (↭-sym (shift (sym eq) xs _))
+    ↭-trans (↭-reflexive eq') (↭-sym (↭-shift (sym eq) xs _))
   ↭-dropMiddleElement-Cover (w ∷ ws) [] (eq , eq') =
-    ↭-trans
-      (shift eq ws _)
-      (subst (_ ↭_) (ListPath.decode _ _ eq') ↭-refl)
+    ↭-trans (↭-shift eq ws _) (↭-reflexive eq')
   ↭-dropMiddleElement-Cover (w ∷ ws) (x ∷ xs) (eq , eq') =
     eq ↭-∷ ↭-dropMiddleElement-Cover ws xs eq'
 
@@ -154,11 +157,22 @@ module _ {A : Type ℓ} where
     ws ++ x ∷ ys ↭ xs ++ x ∷ zs →
     ws ++ ys ↭ xs ++ zs
   ↭-dropMiddleElement ws xs p
-    using ps , qs , eq , q ← split p
+    using ps , qs , eq , q ← ↭-split p
     = ↭-trans (↭-dropMiddleElement-Cover ws ps eq) q
 
   ↭-drop-∷ : ∀ {x xs ys} → x ∷ xs ↭ x ∷ ys → xs ↭ ys
   ↭-drop-∷ = ↭-dropMiddleElement [] []
+
+  ↭-different-head : ∀ {x y xs ys} →
+    ¬ x ≡ y →
+    x ∷ xs ↭ y ∷ ys →
+    Σ[ zs ∈ _ ] (xs ↭ y ∷ zs) × (x ∷ zs ↭ ys)
+  ↭-different-head {x} {y} {xs} {ys} neq p with ↭-split {y} {x ∷ xs} {[]} {ys} p
+  ... | [] , qs , (eq , eq') , q = ⊥.rec (neq eq)
+  ... | p ∷ ps , qs , (eq , eq') , q =
+          ps ++ qs ,
+          ↭-trans (↭-reflexive eq') (↭-sym (↭-shift refl ps qs)) ,
+          subst (λ y → y ∷ ps ++ qs ↭ ys) (sym eq) q
 
 --------------------------------------------------------------------------------
 -- Quotient of lists up to permutation
@@ -203,6 +217,20 @@ drop-∷↭ x =
   SQ.elimProp2
     (λ _ _ → isProp→ (squash/ _ _))
     (λ _ _ → PT.rec (squash/ _ _) (eq/ _ _ ∘ ∣_∣₁ ∘ ↭-drop-∷) ∘ reify↭)
+
+different-head↭ : ∀ (x y : A) (xs ys : List↭ A) →
+  ¬ x ≡ y →
+  x ∷↭ xs ≡ y ∷↭ ys →
+  ∃[ zs ∈ _ ] (xs ≡ y ∷↭ zs) × (x ∷↭ zs ≡ ys)
+different-head↭ x y =
+  SQ.elimProp2
+    (λ _ _ → isPropΠ2 λ _ _ → squash₁)
+    (λ xs ys neq →
+      PT.map
+        (λ p →
+          let zs , q , r = ↭-different-head neq p
+           in [ zs ] , eq/ _ _ ∣ q ∣₁ , eq/ _ _ ∣ r ∣₁)
+        ∘ reify↭)
 
 --------------------------------------------------------------------------------
 -- ∥ NF n ∥₂ ≃ List↭ (Factor n)
@@ -318,24 +346,58 @@ drop-∷' {n = n} =
       α ≡ β)
     drop-∷↭
 
-PathIdTrunc1 : (x y : A) → (∣ x ∣₂ ≡ ∣ y ∣₂) ≡ ∥ x ≡ y ∥₁
-PathIdTrunc1 {ℓ} {A} x y =
-    ∣ x ∣₂ ≡ ∣ y ∣₂
-  ≡⟨ cong₃
-      Path
-      propTrunc≡Trunc2
-      (toPathP (cong ∣_∣ (transportRefl x)))
-      (toPathP (cong ∣_∣ (transportRefl y)))
-  ⟩
-    ∣ x ∣ₕ ≡ ∣ y ∣ₕ
-  ≡⟨ PathIdTrunc 1 ⟩
-    (∥ x ≡ y ∥ 1)
-  ≡⟨ sym propTrunc≡Trunc1 ⟩
-    ∥ x ≡ y ∥₁
-  ∎
+different-head' : (φ ψ : Factor n) (α β : ∥ NF n ∥₂) →
+  ¬ φ ≡ ψ →
+  φ ∣*ᶠ∣ α ≡ ψ ∣*ᶠ∣ β →
+  ∃[ γ ∈ _ ] (α ≡ ψ ∣*ᶠ∣ γ) × (φ ∣*ᶠ∣ γ ≡ β)
+different-head' {n = n} =
+  transport
+    (λ i →
+      (φ ψ : Factor n) (α β : ∥NF∥₂≡List↭ {n} (~ i)) →
+      ¬ φ ≡ ψ →
+      consPath (~ i) φ α ≡ consPath (~ i) ψ β →
+      ∃[ γ ∈ ∥NF∥₂≡List↭ {n} (~ i) ]
+        (α ≡ consPath (~ i) ψ γ) × (consPath (~ i) φ γ ≡ β))
+    different-head↭
+
+Path∥₂→∥Path∥₁ : {x y : A} → ∣ x ∣₂ ≡ ∣ y ∣₂ → ∥ x ≡ y ∥₁
+Path∥₂→∥Path∥₁ {x = x} {y = y} =
+  Iso.inv propTruncTrunc1Iso
+    ∘ Iso.fun (PathIdTruncIso 1)
+    ∘ transport
+        (cong₃
+          Path
+            propTrunc≡Trunc2
+            (toPathP (transportRefl ∣ x ∣))
+            (toPathP (transportRefl ∣ y ∣)))
 
 drop-∷ : (φ : Factor n) (α β : NF n) → ∥ φ *ᶠ α ≡ φ *ᶠ β ∥₁ → ∥ α ≡ β ∥₁
 drop-∷ φ α β =
-  transport
-    (λ i → PathIdTrunc1 (φ *ᶠ α) (φ *ᶠ β) i → PathIdTrunc1 α β i)
-    (drop-∷' φ ∣ α ∣₂ ∣ β ∣₂)
+  PT.rec
+    squash₁
+    (Path∥₂→∥Path∥₁ ∘ drop-∷' φ ∣ α ∣₂ ∣ β ∣₂ ∘ cong ∣_∣₂)
+
+different-head : (φ ψ : Factor n) (α β : NF n)
+  → ¬ ∥ φ ≡ ψ ∥₁
+  → ∥ φ *ᶠ α ≡ ψ *ᶠ β ∥₁
+  → ∃[ γ ∈ _ ] (α ≡ ψ *ᶠ γ) × (φ *ᶠ γ ≡ β)
+different-head φ ψ α β neq =
+  PT.rec
+    squash₁
+    λ φα≡ψβ →
+      PT.rec squash₁
+        (λ (γ , p , q) →
+          ST.elim
+            {B = λ γ →
+              ∣ α ∣₂ ≡ ψ ∣*ᶠ∣ γ →
+              φ ∣*ᶠ∣ γ ≡ ∣ β ∣₂ →
+              ∃[ γ ∈ _ ] (α ≡ ψ *ᶠ γ) × (φ *ᶠ γ ≡ β)}
+            (λ _ → isProp→isSet (isPropΠ2 (λ _ _ → squash₁)))
+            (λ γ p q →
+              PT.rec2
+                squash₁
+                (λ p q → ∣ γ , p , q ∣₁)
+                (Path∥₂→∥Path∥₁ p)
+                (Path∥₂→∥Path∥₁ q))
+            γ p q)
+        (different-head' φ ψ ∣ α ∣₂ ∣ β ∣₂ (neq ∘ ∣_∣₁) (cong ∣_∣₂ φα≡ψβ))
