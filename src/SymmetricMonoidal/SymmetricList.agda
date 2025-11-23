@@ -4,7 +4,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels using
   (isGroupoid→CubeP; isSet→SquareP; isSet→isGroupoid)
 
-open import Cubical.Foundations.Extra
+open import Cubical.Foundations.Extra using
+  (doubleCompPathP; doubleCompPathP≡doubleCompPath)
 
 private
   variable
