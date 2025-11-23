@@ -93,25 +93,31 @@ Unitˢ = Unit* , isSetUnit*
 _×ˢ_ : (A : hSet a) (B : hSet b) → hSet (ℓ-max a b)
 (A , ASet) ×ˢ (B , BSet) = (A × B) , isSet× ASet BSet
 
-×ˢ-swap : (A : hSet a) (B : hSet b) (C : hSet c) →
-  (A ×ˢ B ×ˢ C) ≡ (B ×ˢ A ×ˢ C)
-×ˢ-swap A B C = TypeOfHLevel≡ 2 (×-swap _ _ _)
+-- This opaque is needed for type checking performance
+-- Without opaque it takes indefinitely to type check SetModel in
+-- CartesianClosed.SymmetricTree.SetInterpretation for some reason
+opaque
 
-×ˢ-invol : (A : hSet a) (B : hSet b) (C : hSet c) →
-  ×ˢ-swap A B C ≡ sym (×ˢ-swap B A C)
-×ˢ-invol A B C =
-  TypeOfHLevel≡≡ 2 (×-invol (A .fst) (B .fst) (C .fst))
+  ×ˢ-swap : (A : hSet a) (B : hSet b) (C : hSet c) →
+    (A ×ˢ B ×ˢ C) ≡ (B ×ˢ A ×ˢ C)
+  ×ˢ-swap A B C = TypeOfHLevel≡ 2 (×-swap _ _ _)
 
-×ˢ-ybe : (A : hSet a) (B : hSet b) (C : hSet c) (D : hSet d) →
-  Path ((A ×ˢ B ×ˢ C ×ˢ D) ≡ (C ×ˢ B ×ˢ A ×ˢ D))
-    (×ˢ-swap A B (C ×ˢ D)
-      ∙∙ cong (B ×ˢ_) (×ˢ-swap A C D)
-      ∙∙ ×ˢ-swap B C (A ×ˢ D))
-    (cong (A ×ˢ_) (×ˢ-swap B C D)
-      ∙∙ ×ˢ-swap A C (B ×ˢ D)
-      ∙∙ cong (C ×ˢ_) (×ˢ-swap A B D))
-×ˢ-ybe A B C D =
-  TypeOfHLevel≡≡ 2 (×-ybe (A .fst) (B .fst) (C .fst) (D .fst))
+  ×ˢ-invol : (A : hSet a) (B : hSet b) (C : hSet c) →
+    ×ˢ-swap A B C ≡ sym (×ˢ-swap B A C)
+  ×ˢ-invol A B C =
+    TypeOfHLevel≡≡ 2 (×-invol (A .fst) (B .fst) (C .fst))
+
+  ×ˢ-ybe : (A : hSet a) (B : hSet b) (C : hSet c) (D : hSet d) →
+    Path ((A ×ˢ B ×ˢ C ×ˢ D) ≡ (C ×ˢ B ×ˢ A ×ˢ D))
+      (×ˢ-swap A B (C ×ˢ D)
+        ∙∙ cong (B ×ˢ_) (×ˢ-swap A C D)
+        ∙∙ ×ˢ-swap B C (A ×ˢ D))
+      (cong (A ×ˢ_) (×ˢ-swap B C D)
+        ∙∙ ×ˢ-swap A C (B ×ˢ D)
+        ∙∙ cong (C ×ˢ_) (×ˢ-swap A B D))
+  ×ˢ-ybe A B C D =
+    TypeOfHLevel≡≡ 2 (×-ybe (A .fst) (B .fst) (C .fst) (D .fst))
+
 
 ⟦_⟧ : SList (hSet ℓ) → hSet ℓ
 ⟦_⟧ = rec isGroupoidHSet Unitˢ _×ˢ_ ×ˢ-swap ×ˢ-invol ×ˢ-ybe
