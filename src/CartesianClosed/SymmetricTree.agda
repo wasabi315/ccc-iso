@@ -171,6 +171,43 @@ module ElimSet (M : MotiveDepSet A ℓ′ ℓ″) where
   open Elim (MotiveDepSet.motiveDep M) public renaming
     (elimTree to elimTreeSet; elimForest to elimForestSet)
 
+record MotiveDepProp (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ (ℓ-max ℓ′ ℓ″))) where
+  no-eta-equality
+  infixr 4 _▸ᴹ_
+  infixr 5 _∷ᴹ_
+  field
+    STreeᴹ : STree A → Type ℓ′
+    SForestᴹ : SForest A → Type ℓ″
+    isPropSForestᴹ : ∀ ts → isProp (SForestᴹ ts)
+
+    _▸ᴹ_ : ∀ {ts} (tsᴹ : SForestᴹ ts) x → STreeᴹ (ts ▸ x)
+
+    []ᴹ : SForestᴹ []
+    _∷ᴹ_ : ∀ {t ts} (tᴹ : STreeᴹ t) (tsᴹ : SForestᴹ ts) → SForestᴹ (t ∷ ts)
+
+  swapᴹ : ∀ {t u ts} tᴹ uᴹ tsᴹ →
+    PathP (λ i → SForestᴹ (swap t u ts i))
+      (tᴹ ∷ᴹ uᴹ ∷ᴹ tsᴹ)
+      (uᴹ ∷ᴹ tᴹ ∷ᴹ tsᴹ)
+  swapᴹ {t} {u} {ts} _ _ _ =
+    isProp→PathP (λ i → isPropSForestᴹ (swap t u ts i)) _ _
+
+  motiveDepSet : MotiveDepSet A ℓ′ ℓ″
+  motiveDepSet = record
+    { STreeᴹ = STreeᴹ
+    ; SForestᴹ = SForestᴹ
+    ; isSetSForestᴹ = λ ts → isProp→isSet (isPropSForestᴹ ts)
+    ; _▸ᴹ_ = _▸ᴹ_
+    ; []ᴹ = []ᴹ
+    ; _∷ᴹ_ = _∷ᴹ_
+    ; swapᴹ = swapᴹ
+    }
+
+
+module ElimProp (M : MotiveDepProp A ℓ′ ℓ″) where
+  open ElimSet (MotiveDepProp.motiveDepSet M) public renaming
+    (elimTreeSet to elimTreeProp; elimForestSet to elimForestProp)
+
 
 record Motive (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ (ℓ-max ℓ′ ℓ″))) where
   no-eta-equality
@@ -224,6 +261,54 @@ module Rec (M : Motive A ℓ′ ℓ″) where
       (λ i → recForest (p i)) (λ i → recForest (q i))
       (λ i j → recForest (P i j)) (λ i j → recForest (Q i j))
       i j k
+
+
+record MotiveSet (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ (ℓ-max ℓ′ ℓ″))) where
+  no-eta-equality
+  infixr 4 _▸ᴹ_
+  infixr 5 _∷ᴹ_
+  field
+    STreeᴹ : Type ℓ′
+    SForestᴹ : Type ℓ″
+    isSetSForestᴹ : isSet SForestᴹ
+
+    _▸ᴹ_ : SForestᴹ → A → STreeᴹ
+
+    []ᴹ : SForestᴹ
+    _∷ᴹ_ : STreeᴹ → SForestᴹ → SForestᴹ
+
+    swapᴹ : ∀ t u ts → t ∷ᴹ u ∷ᴹ ts ≡ u ∷ᴹ t ∷ᴹ ts
+
+  involᴹ : ∀ t u ts → swapᴹ t u ts ≡ sym (swapᴹ u t ts)
+  involᴹ t u ts = isSetSForestᴹ _ _ _ _
+
+  ybeᴹ : ∀ t u v ts →
+    Path (t ∷ᴹ u ∷ᴹ v ∷ᴹ ts ≡ v ∷ᴹ u ∷ᴹ t ∷ᴹ ts)
+      (swapᴹ t u (v ∷ᴹ ts)
+        ∙∙ cong (u ∷ᴹ_) (swapᴹ t v ts)
+        ∙∙ swapᴹ u v (t ∷ᴹ ts))
+      (cong (t ∷ᴹ_) (swapᴹ u v ts)
+        ∙∙ swapᴹ t v (u ∷ᴹ ts)
+        ∙∙ cong (v ∷ᴹ_) (swapᴹ t u ts))
+  ybeᴹ t u v ts = isSetSForestᴹ _ _ _ _
+
+  motive : Motive A ℓ′ ℓ″
+  motive = record
+    { STreeᴹ = STreeᴹ
+    ; SForestᴹ = SForestᴹ
+    ; isGroupoidSForestᴹ = isSet→isGroupoid isSetSForestᴹ
+    ; _▸ᴹ_ = _▸ᴹ_
+    ; []ᴹ = []ᴹ
+    ; _∷ᴹ_ = _∷ᴹ_
+    ; swapᴹ = swapᴹ
+    ; involᴹ = involᴹ
+    ; ybeᴹ = ybeᴹ
+    }
+
+
+module RecSet (M : MotiveSet A ℓ′ ℓ″) where
+  open Rec (MotiveSet.motive M) public renaming
+    (recTree to recTreeSet; recForest to recForestSet)
 
 --------------------------------------------------------------------------------
 -- Basic operations
