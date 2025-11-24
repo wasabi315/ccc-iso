@@ -161,11 +161,20 @@ _►_ : SForest A → STree A → STree A
 ts ► (us ▸ x) = ts ++ us ▸ x
 
 _▶_ : SForest A → SForest A → SForest A
-_▶_ ts =
-  SList.rec
-    trunc
-    []
-    (λ u ts▶us → (ts ► u) ∷ ts▶us)
-    (λ t u ts▶us → swap (ts ► t) (ts ► u) ts▶us)
-    (λ t u ts▶us → invol (ts ► t) (ts ► u) ts▶us)
-    (λ t u v ts▶us → ybe (ts ► t) (ts ► u) (ts ► v) ts▶us)
+ts ▶ us = SList.map (ts ►_) us
+
+module _ {A : Type ℓ} {B : Type ℓ′} (f : A → B) where
+  open Motive
+
+  MapMotive : Motive A ℓ′ ℓ′
+  MapMotive .STreeᴹ = STree B
+  MapMotive .SForestᴹ = SForest B
+  MapMotive .isGroupoidSForestᴹ = trunc
+  MapMotive ._▸ᴹ_ ts x = ts ▸ f x
+  MapMotive .[]ᴹ = []
+  MapMotive ._∷ᴹ_ = _∷_
+  MapMotive .swapᴹ = swap
+  MapMotive .involᴹ = invol
+  MapMotive .ybeᴹ = ybe
+
+  open Rec MapMotive renaming (recTree to mapTree; recForest to mapForest) public

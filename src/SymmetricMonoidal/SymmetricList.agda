@@ -10,7 +10,7 @@ open import Cubical.Foundations.Extra using
 private
   variable
     ℓ : Level
-    A : Type ℓ
+    A B : Type ℓ
 
 infixr 5 _∷_ _++_
 
@@ -204,3 +204,10 @@ pattern [_] x = x ∷ []
 
 _++_ : SList A → SList A → SList A
 xs ++ ys = rec trunc ys _∷_ swap invol ybe xs
+
+map : (A → B) → SList A → SList B
+map f =
+  rec trunc
+    [] (λ x → f x ∷_)
+    (λ x y → swap (f x) (f y))
+    (λ x y → invol (f x) (f y)) (λ x y z → ybe (f x) (f y) (f z))

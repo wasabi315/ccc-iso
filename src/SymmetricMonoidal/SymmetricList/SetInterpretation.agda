@@ -12,6 +12,7 @@ open import Cubical.Reflection.StrictEquiv
 
 open import Cubical.Foundations.Extra using
   (×-cong-equiv-snd; ua×-cong-equiv-snd; uaDoubleCompEquiv; TypeOfHLevel≡≡)
+
 open import SymmetricMonoidal.SymmetricList
 
 private
