@@ -364,7 +364,7 @@ module DiscreteFMSet {A : Type ℓ} where
       (λ ∄x∷zs≡ys → no λ x∷xs≡ys → ∄x∷zs≡ys ∣ xs , x∷xs≡ys ∣₁)
       (find x x≟ ys)
 
-  discreteFMSet : Discrete A → (xs ys : FMSet A) → Dec (xs ≡ ys)
+  discreteFMSet : Discrete A → Discrete (FMSet A)
   discreteFMSet discreteA =
     FMSet.ElimProp.f (isPropΠ λ _ → isPropDec (trunc _ _))
       nilCase (λ x {xs} → consCase x xs (discreteA x))
