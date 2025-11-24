@@ -1,7 +1,7 @@
 module SymmetricMonoidal.SymmetricList.Properties where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Function using (_∘_)
+open import Cubical.Foundations.Function using (_∘_; idfun)
 open import Cubical.Foundations.GroupoidLaws using
   (cong-∙; cong-∙∙; doubleCompPath-elim; doubleCompPath-elim';
     assoc; rUnit; lUnit; symDistr)
@@ -27,11 +27,12 @@ open import SymmetricMonoidal.SymmetricList
 private
   variable
     ℓ : Level
-    A B : Type ℓ
+    A B C : Type ℓ
     x y : A
     xs ys : SList A
 
 --------------------------------------------------------------------------------
+-- Basic properties
 
 ¬cons≡nil : ¬ x ∷ xs ≡ []
 ¬cons≡nil p = subst (fst ∘ f) p tt
@@ -58,6 +59,32 @@ swap-natural x y =
         (cong (λ zs → x ∷ y ∷ zs) p)
         (cong (λ zs → y ∷ x ∷ zs) p))
     refl
+
+map-++ : (f : A → B) (xs ys : SList A) →
+  map f (xs ++ ys) ≡ map f xs ++ map f ys
+map-++ f =
+  elimSet
+    (λ _ → isSetΠ λ _ → trunc _ _)
+    (λ _ → refl)
+    (λ x ih ys → cong (f x ∷_) (ih ys))
+    (λ x y ih j ys i → swap (f x) (f y) (ih ys i) j)
+
+map-id : (xs : SList A) → map (idfun _) xs ≡ xs
+map-id =
+  elimSet
+    (λ _ → trunc _ _)
+    refl
+    (λ x → cong (x ∷_))
+    (λ x y ih j i → swap x y (ih i) j)
+
+map-∘ : (f : B → C) (g : A → B) (xs : SList A) →
+  map (f ∘ g) xs ≡ map f (map g xs)
+map-∘ f g =
+  elimSet
+    (λ _ → trunc _ _)
+    refl
+    (λ x → cong (f (g x) ∷_))
+    (λ x y ih j i → swap (f (g x)) (f (g y)) (ih i) j)
 
 --------------------------------------------------------------------------------
 -- Important property
@@ -202,7 +229,7 @@ abstract
          in goal)
 
 --------------------------------------------------------------------------------
--- Properties of product and exponential
+-- Properties of _++_
 
 ++-identityˡ : (xs : SList A) → [] ++ xs ≡ xs
 ++-identityˡ _ = refl

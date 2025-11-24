@@ -99,6 +99,79 @@ module Elim (M : MotiveDep A ℓ′ ℓ″) where
       i j k
 
 
+record MotiveDepSet (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ (ℓ-max ℓ′ ℓ″))) where
+  no-eta-equality
+  infixr 4 _▸ᴹ_
+  infixr 5 _∷ᴹ_
+  field
+    STreeᴹ : STree A → Type ℓ′
+    SForestᴹ : SForest A → Type ℓ″
+    isSetSForestᴹ : ∀ ts → isSet (SForestᴹ ts)
+
+    _▸ᴹ_ : ∀ {ts} (tsᴹ : SForestᴹ ts) x → STreeᴹ (ts ▸ x)
+
+    []ᴹ : SForestᴹ []
+    _∷ᴹ_ : ∀ {t ts} (tᴹ : STreeᴹ t) (tsᴹ : SForestᴹ ts) → SForestᴹ (t ∷ ts)
+
+    swapᴹ : ∀ {t u ts} tᴹ uᴹ tsᴹ →
+      PathP (λ i → SForestᴹ (swap t u ts i))
+        (tᴹ ∷ᴹ uᴹ ∷ᴹ tsᴹ)
+        (uᴹ ∷ᴹ tᴹ ∷ᴹ tsᴹ)
+
+  involᴹ : ∀ {t u ts} tᴹ uᴹ tsᴹ →
+    SquareP (λ i j → SForestᴹ (invol t u ts i j))
+      (swapᴹ tᴹ uᴹ tsᴹ)
+      (symP (swapᴹ uᴹ tᴹ tsᴹ))
+      refl
+      refl
+  involᴹ {t} {u} {ts} tᴹ uᴹ tsᴹ =
+    isSet→SquareP (λ i j → isSetSForestᴹ (invol t u ts i j))
+      (swapᴹ tᴹ uᴹ tsᴹ) (symP (swapᴹ uᴹ tᴹ tsᴹ)) refl refl
+
+  ybeᴹ : ∀ {t u v ts} tᴹ uᴹ vᴹ tsᴹ →
+    SquareP (λ i j → SForestᴹ (ybe t u v ts i j))
+      (doubleCompPathP {B = SForestᴹ}
+        (swapᴹ tᴹ uᴹ (vᴹ ∷ᴹ tsᴹ))
+        (congP (λ _ → uᴹ ∷ᴹ_) (swapᴹ tᴹ vᴹ tsᴹ))
+        (swapᴹ uᴹ vᴹ (tᴹ ∷ᴹ tsᴹ)))
+      (doubleCompPathP {B = SForestᴹ}
+        (congP (λ _ → tᴹ ∷ᴹ_) (swapᴹ uᴹ vᴹ tsᴹ))
+        (swapᴹ tᴹ vᴹ (uᴹ ∷ᴹ tsᴹ))
+        (congP (λ _ → vᴹ ∷ᴹ_) (swapᴹ tᴹ uᴹ tsᴹ)))
+      refl
+      refl
+  ybeᴹ {t} {u} {v} {ts} tᴹ uᴹ vᴹ tsᴹ =
+    isSet→SquareP (λ i j → isSetSForestᴹ (ybe t u v ts i j))
+      (doubleCompPathP {B = SForestᴹ}
+        (swapᴹ tᴹ uᴹ (vᴹ ∷ᴹ tsᴹ))
+        (congP (λ _ → uᴹ ∷ᴹ_) (swapᴹ tᴹ vᴹ tsᴹ))
+        (swapᴹ uᴹ vᴹ (tᴹ ∷ᴹ tsᴹ)))
+      (doubleCompPathP {B = SForestᴹ}
+        (congP (λ _ → tᴹ ∷ᴹ_) (swapᴹ uᴹ vᴹ tsᴹ))
+        (swapᴹ tᴹ vᴹ (uᴹ ∷ᴹ tsᴹ))
+        (congP (λ _ → vᴹ ∷ᴹ_) (swapᴹ tᴹ uᴹ tsᴹ)))
+      refl
+      refl
+
+  motiveDep : MotiveDep A ℓ′ ℓ″
+  motiveDep = record
+    { STreeᴹ = STreeᴹ
+    ; SForestᴹ = SForestᴹ
+    ; isGroupoidSForestᴹ = λ ts → isSet→isGroupoid (isSetSForestᴹ ts)
+    ; _▸ᴹ_ = _▸ᴹ_
+    ; []ᴹ = []ᴹ
+    ; _∷ᴹ_ = _∷ᴹ_
+    ; swapᴹ = swapᴹ
+    ; involᴹ = involᴹ
+    ; ybeᴹ = ybeᴹ
+    }
+
+
+module ElimSet (M : MotiveDepSet A ℓ′ ℓ″) where
+  open Elim (MotiveDepSet.motiveDep M) public renaming
+    (elimTree to elimTreeSet; elimForest to elimForestSet)
+
+
 record Motive (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ (ℓ-max ℓ′ ℓ″))) where
   no-eta-equality
   infixr 4 _▸ᴹ_
