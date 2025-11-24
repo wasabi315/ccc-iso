@@ -2,20 +2,22 @@ module Cubical.HITs.FiniteMultiset.Properties.Extra where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
-open import Cubical.Foundations.HLevels using (isProp→; isPropΠ2)
+open import Cubical.Foundations.HLevels using (isProp→; isPropΠ2; isPropΠ; hProp; isSetHProp)
 open import Cubical.Foundations.Isomorphism using
   (Iso; iso; isoToEquiv; isoToPath; transportIsoToPath; transportIsoToPath⁻)
 open import Cubical.Foundations.Univalence using (ua; uaβ; ~uaβ)
-open import Cubical.Data.Empty as ⊥ using (⊥*)
+open import Cubical.Data.Empty as ⊥ using (⊥*; ⊥; isProp⊥)
 open import Cubical.Data.List as List using (List; []; _∷_; _++_; module ListPath)
 open import Cubical.Data.Sigma using (Σ-syntax; ∃-syntax; _×_; _,_)
 open import Cubical.Data.Sum using (_⊎_; inl; inr)
-open import Cubical.Data.Unit using (Unit*; tt*)
+open import Cubical.Data.Unit using (Unit*; tt*; Unit; tt; isPropUnit)
 open import Cubical.HITs.FiniteMultiset as FMSet using (FMSet; []; _∷_; comm; trunc)
 open import Cubical.HITs.PropositionalTruncation as PT using (∥_∥₁; ∣_∣₁; squash₁)
+open import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 open import Cubical.HITs.SetQuotients as SQ using (_/_; [_]; eq/; squash/)
 open import Cubical.Relation.Binary using (module BinaryRelation)
-open import Cubical.Relation.Nullary using (¬_)
+open import Cubical.Relation.Nullary using
+  (¬_; Dec; yes; no; isPropDec; Discrete; mapDec; decRec)
 
 open BinaryRelation
 open Iso
@@ -29,9 +31,21 @@ infix  4 _∣↭∣_
 infixr 5 _∷↭_
 
 --------------------------------------------------------------------------------
+
+¬cons≡nil : {x : A} {xs : FMSet A} → ¬ x ∷ xs ≡ []
+¬cons≡nil p = subst (fst ∘ f) p tt
+  where
+    f : FMSet A → hProp ℓ-zero
+    f =
+      FMSet.Elim.f
+        (⊥ , isProp⊥) (λ _ _ → Unit , isPropUnit)
+        (λ _ _ _ → refl) (λ _ → isSetHProp)
+
+--------------------------------------------------------------------------------
+-- Properties that seems to be only proved via List / _↭_
+
 -- Permutation relation
 -- Ref: https://github.com/agda/agda-stdlib/blob/master/src/Data/List/Relation/Binary/Permutation/Setoid/Properties.agda
-
 module _ {A : Type ℓ} where
   infix  4 _↭_ _↭′_ _↭″_
   infixr 5 _↭-∷_
@@ -164,7 +178,6 @@ module _ {A : Type ℓ} where
           ↭-trans (↭-reflexive eq') (↭-sym (↭-shift refl ps qs)) ,
           subst (λ y → y ∷ ps ++ qs ↭ ys) (sym eq) q
 
---------------------------------------------------------------------------------
 -- Quotient of lists up to permutation
 
 _∣↭∣_ : {A : Type ℓ} → List A → List A → Type ℓ
@@ -222,8 +235,7 @@ differentHead↭ x y =
            in [ zs ] , eq/ _ _ ∣ q ∣₁ , eq/ _ _ ∣ r ∣₁)
         ∘ reify↭)
 
---------------------------------------------------------------------------------
--- FMSet A ≃ List↭ A
+-- Isomorphism between FMSet A and List↭ A
 
 FMSet→List↭ : FMSet A → List↭ A
 FMSet→List↭ = FMSet.Rec.f squash/ []↭ _∷↭_ comm↭
@@ -268,7 +280,7 @@ FMSetIsoList↭ _ = iso FMSet→List↭ List↭→FMSet section retract
 FMSet≡List↭ : (A : Type ℓ) → FMSet A ≡ List↭ A
 FMSet≡List↭ A = isoToPath (FMSetIsoList↭ A)
 
---------------------------------------------------------------------------------
+-- Time to reap the rewards!
 
 module _ {A : Type ℓ} where
 
@@ -308,3 +320,75 @@ module _ {A : Type ℓ} where
         consPath (~ i) x xs ≡ consPath (~ i) y ys →
         ∃[ zs ∈ _ ] (xs ≡ consPath (~ i) y zs) × (consPath (~ i) x zs ≡ ys))
       differentHead↭
+
+--------------------------------------------------------------------------------
+
+module DiscreteFMSet {A : Type ℓ} where
+  open PTMonad
+
+  nilCase : (xs : FMSet A) → Dec ([] ≡ xs)
+  nilCase =
+    FMSet.ElimProp.f (isPropDec (trunc _ _))
+      (yes refl) (λ _ _ → no (¬cons≡nil ∘ sym))
+
+  find : (x : A) (x≟ : ∀ y → Dec (x ≡ y)) (xs : FMSet A) →
+    Dec (∃[ ys ∈ _ ] x ∷ ys ≡ xs)
+  find x x≟ =
+    FMSet.ElimProp.f (isPropDec squash₁)
+      (no (PT.rec isProp⊥ (¬cons≡nil ∘ snd)))
+      (λ y {xs} ih →
+        decRec
+          (λ x≡y → yes ∣ xs , cong (_∷ xs) x≡y ∣₁)
+          (λ x≢y →
+            mapDec
+              (λ ∃x∷ys≡xs → do
+                (ys , x∷ys≡xs) ← ∃x∷ys≡xs
+                return (y ∷ ys , comm x y ys ∙ cong (y ∷_) x∷ys≡xs))
+              (λ ∄x∷ys≡xs ∃x∷ys≡y∷xs → ∄x∷ys≡xs do
+                ys , x∷ys≡y∷xs ← ∃x∷ys≡y∷xs
+                zs , _ , x∷zs≡xs ← differentHead x y ys xs x≢y x∷ys≡y∷xs
+                return (zs , x∷zs≡xs))
+              ih)
+          (x≟ y))
+
+  consCase : (x : A) (xs : FMSet A) →
+    (x≟ : ∀ y → Dec (x ≡ y)) (xs≟ : ∀ ys → Dec (xs ≡ ys)) →
+    (∀ ys → Dec (x ∷ xs ≡ ys))
+  consCase x xs x≟ xs≟ ys =
+    decRec
+      (PT.rec (isPropDec (trunc _ _)) λ (zs , x∷zs≡ys) →
+        mapDec
+          (λ xs≡zs → cong (x ∷_) xs≡zs ∙ x∷zs≡ys)
+          (λ xs≢zs x∷xs≡ys → xs≢zs (drop-∷ x xs zs (x∷xs≡ys ∙ sym x∷zs≡ys)))
+          (xs≟ zs))
+      (λ ∄x∷zs≡ys → no λ x∷xs≡ys → ∄x∷zs≡ys ∣ xs , x∷xs≡ys ∣₁)
+      (find x x≟ ys)
+
+  discreteFMSet : Discrete A → (xs ys : FMSet A) → Dec (xs ≡ ys)
+  discreteFMSet discreteA =
+    FMSet.ElimProp.f (isPropΠ λ _ → isPropDec (trunc _ _))
+      nilCase (λ x {xs} → consCase x xs (discreteA x))
+
+
+open DiscreteFMSet using (discreteFMSet) public
+
+module Test where private
+  open import Cubical.Data.Nat using (discreteℕ)
+
+  _≟_ = discreteFMSet discreteℕ
+
+  _ : (1 ∷ 2 ∷ 3 ∷ []) ≟ (3 ∷ 2 ∷ 1 ∷ [])
+    ≡ yes
+        (congS (1 ∷_)
+            ((congS (2 ∷_) (refl ∙ refl)
+              ∙ comm 2 3 []
+              ∙ refl))
+          ∙ comm 1 3 (2 ∷ [])
+          ∙ congS (3 ∷_) (comm 1 2 [] ∙ refl))
+  _ = refl
+
+  _ : (1 ∷ 2 ∷ 3 ∷ 2 ∷ 1 ∷ []) ≟ (3 ∷ 1 ∷ 1 ∷ 2 ∷ 2 ∷ []) ≡ yes _
+  _ = refl
+
+  _ : (1 ∷ 2 ∷ 3 ∷ 2 ∷ 1 ∷ []) ≟ (3 ∷ 1 ∷ 1 ∷ 2 ∷ 10 ∷ []) ≡ no _
+  _ = refl
