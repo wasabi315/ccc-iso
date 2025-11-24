@@ -97,5 +97,5 @@ open SListProps public using
 ▶-distribˡ : (ts us vs : SForest A) → (ts ▶ us ++ vs) ≡ ((ts ▶ us) ++ (ts ▶ vs))
 ▶-distribˡ ts = SListProps.map-++ (ts ►_)
 
-⇒-annihilʳ : (ts : SForest A) → (ts ▶ []) ≡ []
-⇒-annihilʳ _ = refl
+▶-annihilʳ : (ts : SForest A) → (ts ▶ []) ≡ []
+▶-annihilʳ _ = refl

@@ -3,13 +3,16 @@ module CartesianClosed.SymmetricTree.SetTruncation where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
 open import Cubical.Foundations.Isomorphism using (Iso; iso; isoToPath)
-open import Cubical.Foundations.HLevels using (isSet→SquareP; isPropΠ; isSet→; isSet×; isOfHLevelRetract)
+open import Cubical.Foundations.HLevels using
+  (isSet→SquareP; isPropΠ; isSet→; isSet×; isOfHLevelRetract)
 open import Cubical.HITs.FiniteMultiset as FMSet using
   (FMSet; []; _∷_; comm; trunc)
 open import Cubical.HITs.SetTruncation as ST using (∥_∥₂; ∣_∣₂; squash₂)
-open import Cubical.Relation.Nullary using (¬_; Discrete; Dec; yes; no; isPropDec; Discrete→isSet)
+open import Cubical.Relation.Nullary using
+  (¬_; Discrete; Dec; yes; no; isPropDec; Discrete→isSet)
 
-open import Cubical.HITs.FiniteMultiset.Properties.Extra using (module DiscreteFMSet)
+open import Cubical.HITs.FiniteMultiset.Properties.Extra using
+  (module DiscreteFMSet)
 
 open import CartesianClosed.SymmetricTree
 
@@ -71,7 +74,8 @@ module ElimSet' (M : MotiveDep' A ℓ′ ℓ″) where
 
   elimForest' [] = []ᴹ
   elimForest' (t ∷ ts) = elimTree' t ∷ᴹ elimForest' ts
-  elimForest' (comm t u ts i) = swapᴹ (elimTree' t) (elimTree' u) (elimForest' ts) i
+  elimForest' (comm t u ts i) =
+    swapᴹ (elimTree' t) (elimTree' u) (elimForest' ts) i
   elimForest' (trunc ts us p q i j) =
     isSet→SquareP (λ i j → isSetSForestᴹ (trunc ts us p q i j))
       (cong elimForest' p) (cong elimForest' q)
@@ -206,15 +210,19 @@ module Backward {A : Type ℓ} where
 
 open Backward public using (STree'→∥STree∥; SForest'→∥SForest∥)
 
-∥STree∥→STree'-arr : (ASet : isSet A) (ts : ∥ SForest A ∥₂) (x : A) →
-  ∥STree∥→STree' ASet (ts ∣▸∣ x) ≡ (∥SForest∥→SForest' ts ▸ x)
-∥STree∥→STree'-arr ASet =
-  ST.elim (λ _ → isProp→isSet (isPropΠ λ _ → isSetSTree' ASet _ _)) (λ _ _ → refl)
+module _ (ASet : isSet A) where
 
-∥SForest∥→SForest'-cons : (ASet : isSet A) (t : ∥ STree A ∥₂) (ts : ∥ SForest A ∥₂) →
-  ∥SForest∥→SForest' (t ∣∷∣ ts) ≡ (∥STree∥→STree' ASet t ∷ ∥SForest∥→SForest' ts)
-∥SForest∥→SForest'-cons ASet =
-  ST.elim2 (λ _ _ → isProp→isSet (trunc _ _)) (λ _ _ → refl)
+  ∥STree∥→STree'-arr : (ts : ∥ SForest A ∥₂) (x : A) →
+    ∥STree∥→STree' ASet (ts ∣▸∣ x) ≡ (∥SForest∥→SForest' ts ▸ x)
+  ∥STree∥→STree'-arr =
+    ST.elim (λ _ → isProp→isSet (isPropΠ λ _ → isSetSTree' ASet _ _))
+      (λ _ _ → refl)
+
+  ∥SForest∥→SForest'-cons : (t : ∥ STree A ∥₂) (ts : ∥ SForest A ∥₂) →
+    ∥SForest∥→SForest' (t ∣∷∣ ts)
+      ≡ (∥STree∥→STree' ASet t ∷ ∥SForest∥→SForest' ts)
+  ∥SForest∥→SForest'-cons =
+    ST.elim2 (λ _ _ → isProp→isSet (trunc _ _)) (λ _ _ → refl)
 
 module Section (ASet : isSet A) where
   open MotiveDepProp'
@@ -261,28 +269,33 @@ open Retract public using (retractTree; retractForest)
 
 ∥STree∥IsoSTree' : isSet A → Iso (∥ STree A ∥₂) (STree' A)
 ∥STree∥IsoSTree' ASet =
-  iso (∥STree∥→STree' ASet) STree'→∥STree∥ (sectionTree ASet) (retractTree ASet)
+  iso (∥STree∥→STree' ASet) STree'→∥STree∥
+    (sectionTree ASet) (retractTree ASet)
 
 ∥STree∥≡STree' : isSet A → ∥ STree A ∥₂ ≡ STree' A
 ∥STree∥≡STree' ASet = isoToPath (∥STree∥IsoSTree' ASet)
 
 ∥SForest∥IsoSForest' : isSet A → Iso (∥ SForest A ∥₂) (SForest' A)
 ∥SForest∥IsoSForest' ASet =
-  iso ∥SForest∥→SForest' SForest'→∥SForest∥ (sectionForest ASet) (retractForest ASet)
+  iso ∥SForest∥→SForest' SForest'→∥SForest∥
+    (sectionForest ASet) (retractForest ASet)
 
 ∥SForest∥≡SForest' : isSet A → ∥ SForest A ∥₂ ≡ SForest' A
 ∥SForest∥≡SForest' ASet = isoToPath (∥SForest∥IsoSForest' ASet)
 
 module _ (discreteA : Discrete A) where
-  ASet = Discrete→isSet discreteA
+  private
+    ASet = Discrete→isSet discreteA
 
   discrete∥STree∥ : Discrete (∥ STree A ∥₂)
   discrete∥STree∥ =
-    transport (cong Discrete (sym (∥STree∥≡STree' ASet))) (discreteSTree' discreteA)
+    transport (λ i → Discrete (∥STree∥≡STree' ASet (~ i)))
+      (discreteSTree' discreteA)
 
   discrete∥SForest∥ : Discrete (∥ SForest A ∥₂)
   discrete∥SForest∥ =
-    transport (cong Discrete (sym (∥SForest∥≡SForest' ASet))) (discreteSForest' discreteA)
+    transport (λ i → Discrete (∥SForest∥≡SForest' ASet (~ i)))
+      (discreteSForest' discreteA)
 
 
 module Test where private

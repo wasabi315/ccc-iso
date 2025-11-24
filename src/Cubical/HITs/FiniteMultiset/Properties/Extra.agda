@@ -42,7 +42,9 @@ infixr 5 _∷↭_
         (λ _ _ _ → refl) (λ _ → isSetHProp)
 
 --------------------------------------------------------------------------------
--- Properties that seems to be only proved via List / _↭_
+-- Properties that seem provable only via List / _↭_
+-- We cannot directly case on the path constructors of FMSet, so we instead
+-- "materialise" paths into _↭_ and operate on them.
 
 -- Permutation relation
 -- Ref: https://github.com/agda/agda-stdlib/blob/master/src/Data/List/Relation/Binary/Permutation/Setoid/Properties.agda

@@ -406,7 +406,8 @@ abstract
                   (cong (λ zs → x ∷ y ∷ zs) (++-comm ys xs))
                 filler2 =
                   congP (λ _ → sym)
-                    (cong-∙ (x ∷_) _ _ ◁ symP (compPath-filler' _ _))
+                    (pasteS (sym (cong-∙ (x ∷_) _ _)) refl refl refl
+                      (symP (compPath-filler' _ _)))
 
                 filler3 : Path _
                   (sym (cong (λ zs → x ∷ y ∷ zs) (++-comm xs ys)))
@@ -430,7 +431,9 @@ abstract
                   (cong (y ∷_) (cong (x ∷_) (++-comm xs ys) ∙ shift x ys xs))
                   (sym (cong (λ zs → y ∷ x ∷ zs) (++-comm xs ys)))
                   refl
-                filler6 = compPath-filler' _ _ ▷ sym (cong-∙ (y ∷_) _ _)
+                filler6 =
+                  pasteS refl (sym (cong-∙ (y ∷_) _ _)) refl refl
+                    (compPath-filler' _ _)
 
                 filler7 : Path _
                   (cong (y ∷_) (cong (x ∷_) (++-comm xs ys) ∙ shift x ys xs))
