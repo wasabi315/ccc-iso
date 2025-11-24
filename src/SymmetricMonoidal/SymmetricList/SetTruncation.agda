@@ -72,7 +72,7 @@ FMSet≡∥SList∥ _ = isoToPath (FMSetIso∥SList∥ _)
 
 module _ (discreteA : Discrete A) where
 
-  discrete∥SList∥ : Discrete (∥ SList A ∥₂)
+  discrete∥SList∥ : Discrete ∥ SList A ∥₂
   discrete∥SList∥ =
     transport
       (λ i → Discrete (FMSet≡∥SList∥ A (~ i)))

@@ -287,12 +287,12 @@ module _ (discreteA : Discrete A) where
   private
     ASet = Discrete→isSet discreteA
 
-  discrete∥STree∥ : Discrete (∥ STree A ∥₂)
+  discrete∥STree∥ : Discrete ∥ STree A ∥₂
   discrete∥STree∥ =
     transport (λ i → Discrete (∥STree∥≡STree' ASet (~ i)))
       (discreteSTree' discreteA)
 
-  discrete∥SForest∥ : Discrete (∥ SForest A ∥₂)
+  discrete∥SForest∥ : Discrete ∥ SForest A ∥₂
   discrete∥SForest∥ =
     transport (λ i → Discrete (∥SForest∥≡SForest' ASet (~ i)))
       (discreteSForest' discreteA)
