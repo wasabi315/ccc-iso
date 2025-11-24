@@ -9,13 +9,13 @@ open import SymmetricMonoidal.SymmetricList.SetInterpretation using
 
 private
   variable
-    ℓ a b : Level
+    ℓ ℓ′ : Level
 
 infixr 0 _→ˢ_
 
 --------------------------------------------------------------------------------
 
-_→ˢ_ : (A : hSet a) (B : hSet b) → hSet (ℓ-max a b)
+_→ˢ_ : (A : hSet ℓ) (B : hSet ℓ′) → hSet (ℓ-max ℓ ℓ′)
 (A , ASet) →ˢ (B , BSet) = (A → B) , isSet→ BSet
 
 --------------------------------------------------------------------------------

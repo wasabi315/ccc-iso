@@ -228,7 +228,10 @@ module Rec (M : Motive A ℓ′ ℓ″) where
 --------------------------------------------------------------------------------
 -- Basic operations
 
-open SList public using (_++_)
+open SList public using ([_]; _++_)
+
+-- ι : A → SForest A
+pattern ι x = [ [] ▸ x ]
 
 _►_ : SForest A → STree A → STree A
 ts ► (us ▸ x) = ts ++ us ▸ x

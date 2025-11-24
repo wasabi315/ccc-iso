@@ -19,24 +19,14 @@ private
 
 open SListProps public using (swap-natural; ¬cons≡nil)
 
-module MapAppend {A : Type ℓ} {B : Type ℓ′} (f : A → B) where
-  open MotiveDepSet
-
-  MapAppendMotive : MotiveDepSet A (ℓ-max ℓ ℓ′) (ℓ-max ℓ ℓ′)
-  MapAppendMotive .STreeᴹ _ = Unit*
-  MapAppendMotive .SForestᴹ ts =
-    ∀ us → mapForest f (ts ++ us) ≡ mapForest f ts ++ mapForest f us
-  MapAppendMotive .isSetSForestᴹ _ = isSetΠ λ _ → trunc _ _
-  MapAppendMotive ._▸ᴹ_ _ _ = tt*
-  MapAppendMotive .[]ᴹ _ = refl
-  MapAppendMotive ._∷ᴹ_ _ ih us = cong (_ ∷_) (ih us)
-  MapAppendMotive .swapᴹ {t} {u} _ _ ih j us i =
-    swap (mapTree f t) (mapTree f u) (ih us i) j
-
-  open ElimSet MapAppendMotive public using () renaming
-    (elimForestSet to mapForest-++)
-
-open MapAppend public using (mapForest-++)
+mapForest-++ : (f : A → B) (ts us : SForest A) →
+  mapForest f (ts ++ us) ≡ mapForest f ts ++ mapForest f us
+mapForest-++ f =
+  SList.elimSet
+    (λ _ → isSetΠ λ _ → trunc _ _)
+    (λ _ → refl)
+    (λ x ih us → cong (mapTree f x ∷_) (ih us))
+    (λ x y ih j us i → swap (mapTree f x) (mapTree f y) (ih us i) j)
 
 module MapId {A : Type ℓ} where
   open MotiveDepSet
