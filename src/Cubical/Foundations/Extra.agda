@@ -3,6 +3,7 @@ module Cubical.Foundations.Extra where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Path
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Univalence
 open import Cubical.Data.Sigma using (_×_; _,_; Σ-cong-equiv-snd)
@@ -64,6 +65,56 @@ doubleCompPathP≡doubleCompPath {A = A} p q r j i =
       k (j = i0) → doubleCompPathP-filler {p = p} {q = q} {r = r} p q r k i
       k (j = i1) → doubleCompPath-filler p q r k i)
     (q i)
+
+doubleCompPaths→Square : {x y y' z z' w : A} →
+  {p : x ≡ y} {q : y ≡ z} {r : z ≡ w} →
+  {p' : x ≡ y'} {q' : y' ≡ z'} {r' : z' ≡ w} →
+  (p ∙∙ q ∙∙ r) ≡ (p' ∙∙ q' ∙∙ r') →
+  Square (p ∙ q) (q' ∙ r') p' r
+doubleCompPaths→Square P =
+  compPath→Square
+    (sym (doubleCompPath-elim' _ _ _) ∙∙ sym P ∙∙ doubleCompPath-elim _ _ _)
+
+doubleCompPaths→Square' : ∀ {a} {A : Type a} {x y y' z z' w : A} →
+  {p : x ≡ y} {q : y ≡ z} {r : z ≡ w} →
+  {p' : x ≡ y'} {q' : y' ≡ z'} {r' : z' ≡ w} →
+  (p ∙∙ q ∙∙ r) ≡ (p' ∙∙ q' ∙∙ r') →
+  Square p r' (p' ∙ q') (q ∙ r)
+doubleCompPaths→Square' P =
+  compPath→Square
+    (sym (doubleCompPath-elim _ _ _) ∙∙ sym P ∙∙ doubleCompPath-elim' _ _ _)
+
+Square→doubleCompPath' : ∀ {a} {A : Type a} {x y y' z z' w : A} →
+  {p : x ≡ y} {q : y ≡ z} {r : z ≡ w} →
+  {p' : x ≡ y'} {q' : y' ≡ z'} {r' : z' ≡ w} →
+  Square p r' (p' ∙ q') (q ∙ r) →
+  (p ∙∙ q ∙∙ r) ≡ (p' ∙∙ q' ∙∙ r')
+Square→doubleCompPath' P =
+  doubleCompPath-elim' _ _ _
+    ∙∙ sym (Square→compPath P)
+    ∙∙ sym (doubleCompPath-elim _ _ _)
+
+doubleRUnit : ∀ {a} {A : Type a} {x y : A} (p : x ≡ y) → p ≡ (p ∙∙ refl ∙∙ refl)
+doubleRUnit p = rUnit _ ∙∙ rUnit _ ∙∙ sym (doubleCompPath-elim _ _ _)
+
+_◁v_▷_ : ∀ {a} {A : Type a} {x y y' z : A} →
+  {p : x ≡ y} {p' p'' : x ≡ y'} {q q' : y ≡ z} {q'' : y' ≡ z} →
+  (Q : p' ≡ p'') (P : Square p q'' p' q) (R : q ≡ q') →
+  Square p q'' p'' q'
+Q ◁v P ▷ R = subst2 (Square _ _) Q R P
+
+cong₂-∙ : ∀ {a b c} {A : Type a} {B : Type b} {C : Type c} →
+  {x y z : A} {u v w : B} (f : A → B → C) →
+  (p : x ≡ y) (q : y ≡ z) (r : u ≡ v) (s : v ≡ w) →
+  cong₂ f (p ∙ q) (r ∙ s) ≡ cong₂ f p r ∙ cong₂ f q s
+cong₂-∙ {x = x} {u = u} f p q r s j i =
+  hcomp
+    (λ where
+      k (i = i0) → f x u
+      k (i = i1) → f (q k) (s k)
+      k (j = i0) → f (compPath-filler p q k i) (compPath-filler r s k i)
+      k (j = i1) → compPath-filler (cong₂ f p r) (cong₂ f q s) k i)
+    (f (p i) (r i))
 
 TypeOfHLevel≡≡ : (n : HLevel) {A B : TypeOfHLevel ℓ n} {p q : A ≡ B} →
   cong fst p ≡ cong fst q → p ≡ q
