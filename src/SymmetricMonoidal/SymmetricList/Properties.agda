@@ -51,14 +51,7 @@ swap-natural : (x y : A) (p : xs ≡ ys) →
     (swap x y ys)
     (cong (λ zs → x ∷ y ∷ zs) p)
     (cong (λ zs → y ∷ x ∷ zs) p)
-swap-natural x y =
-  J (λ zs p →
-      Square
-        (swap x y _)
-        (swap x y zs)
-        (cong (λ zs → x ∷ y ∷ zs) p)
-        (cong (λ zs → y ∷ x ∷ zs) p))
-    refl
+swap-natural x y = cong (swap x y)
 
 map-++ : (f : A → B) (xs ys : SList A) →
   map f (xs ++ ys) ≡ map f xs ++ map f ys
