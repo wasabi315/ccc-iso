@@ -31,16 +31,16 @@ mapForest-++ f =
 module MapId {A : Type ℓ} where
   open MotiveDepSet
 
-  MapIdMotive : MotiveDepSet A ℓ ℓ
-  MapIdMotive .STreeᴹ t = mapTree (idfun _) t ≡ t
-  MapIdMotive .SForestᴹ ts = mapForest (idfun _) ts ≡ ts
-  MapIdMotive .isSetSForestᴹ _ = trunc _ _
-  MapIdMotive ._▸ᴹ_ ih x = cong (_▸ x) ih
-  MapIdMotive .[]ᴹ = refl
-  MapIdMotive ._∷ᴹ_ ih1 ih2 = cong₂ _∷_ ih1 ih2
-  MapIdMotive .swapᴹ ih1 ih2 ih3 j i = swap (ih1 i) (ih2 i) (ih3 i) j
+  MapId : MotiveDepSet A ℓ ℓ
+  MapId .STreeᴹ t = mapTree (idfun _) t ≡ t
+  MapId .SForestᴹ ts = mapForest (idfun _) ts ≡ ts
+  MapId .isSetSForestᴹ _ = trunc _ _
+  MapId ._▸ᴹ_ ih x = cong (_▸ x) ih
+  MapId .[]ᴹ = refl
+  MapId ._∷ᴹ_ ih1 ih2 = cong₂ _∷_ ih1 ih2
+  MapId .swapᴹ ih1 ih2 ih3 j i = swap (ih1 i) (ih2 i) (ih3 i) j
 
-  open ElimSet MapIdMotive public renaming
+  open ElimSet MapId public renaming
     (elimTreeSet to mapTree-id; elimForestSet to mapForest-id)
 
 open MapId public using (mapTree-id; mapForest-id)
@@ -48,16 +48,16 @@ open MapId public using (mapTree-id; mapForest-id)
 module MapComp (f : B → C) (g : A → B) where
   open MotiveDepSet
 
-  MapCompMotive : MotiveDepSet A _ _
-  MapCompMotive .STreeᴹ t = mapTree (f ∘ g) t ≡ mapTree f (mapTree g t)
-  MapCompMotive .SForestᴹ ts = mapForest (f ∘ g) ts ≡ mapForest f (mapForest g ts)
-  MapCompMotive .isSetSForestᴹ _ = trunc _ _
-  MapCompMotive ._▸ᴹ_ ih x = cong (_▸ f (g x)) ih
-  MapCompMotive .[]ᴹ = refl
-  MapCompMotive ._∷ᴹ_ ih1 ih2 = cong₂ _∷_ ih1 ih2
-  MapCompMotive .swapᴹ ih1 ih2 ih3 j i = swap (ih1 i) (ih2 i) (ih3 i) j
+  MapComp : MotiveDepSet A _ _
+  MapComp .STreeᴹ t = mapTree (f ∘ g) t ≡ mapTree f (mapTree g t)
+  MapComp .SForestᴹ ts = mapForest (f ∘ g) ts ≡ mapForest f (mapForest g ts)
+  MapComp .isSetSForestᴹ _ = trunc _ _
+  MapComp ._▸ᴹ_ ih x = cong (_▸ f (g x)) ih
+  MapComp .[]ᴹ = refl
+  MapComp ._∷ᴹ_ ih1 ih2 = cong₂ _∷_ ih1 ih2
+  MapComp .swapᴹ ih1 ih2 ih3 j i = swap (ih1 i) (ih2 i) (ih3 i) j
 
-  open ElimSet MapCompMotive public renaming
+  open ElimSet MapComp public renaming
     (elimTreeSet to mapTree-∘; elimForestSet to mapForest-∘)
 
 open MapComp public using (mapTree-∘; mapForest-∘)

@@ -139,24 +139,22 @@ module Rec' (M : MotiveSet A ℓ′ ℓ″) where
 
 --------------------------------------------------------------------------------
 
-module DiscreteSTree' {A : Type ℓ} (discreteA : Discrete A) where
+module _ {A : Type ℓ} (discreteA : Discrete A) where
   open MotiveDepProp'
 
-  M : MotiveDepProp' A _ _
-  M .STreeᴹ t = ∀ u → Dec (t ≡ u)
-  M .SForestᴹ ts = ∀ us → Dec (ts ≡ us)
-  M .isPropSForestᴹ = λ _ → isPropΠ λ _ → isPropDec (trunc _ _)
-  M .[]ᴹ = DiscreteFMSet.nilCase
-  M ._∷ᴹ_ = DiscreteFMSet.consCase _ _
-  M ._▸ᴹ_ ts≟ x (us ▸ y) with discreteA x y | ts≟ us
+  DiscreteSTree' : MotiveDepProp' A _ _
+  DiscreteSTree' .STreeᴹ t = ∀ u → Dec (t ≡ u)
+  DiscreteSTree' .SForestᴹ ts = ∀ us → Dec (ts ≡ us)
+  DiscreteSTree' .isPropSForestᴹ = λ _ → isPropΠ λ _ → isPropDec (trunc _ _)
+  DiscreteSTree' .[]ᴹ = DiscreteFMSet.nilCase
+  DiscreteSTree' ._∷ᴹ_ = DiscreteFMSet.consCase _ _
+  DiscreteSTree' ._▸ᴹ_ ts≟ x (us ▸ y) with discreteA x y | ts≟ us
   ... | no x≢y  | _         = no (x≢y ∘ cong codomain)
   ... | yes x≡y | no ts≢us  = no (ts≢us ∘ cong domain)
   ... | yes x≡y | yes ts≡us = yes (cong₂ _▸_ ts≡us x≡y)
 
-  open ElimProp' M public renaming
+  open ElimProp' DiscreteSTree' public renaming
     (elimTreeProp' to discreteSTree'; elimForestProp' to discreteSForest')
-
-open DiscreteSTree' public using (discreteSTree'; discreteSForest')
 
 --------------------------------------------------------------------------------
 
@@ -173,22 +171,20 @@ _∣∷∣_ = ST.rec2 squash₂ λ t ts → ∣ t ∷ ts ∣₂
 ∣swap∣ = ST.elim3 (λ _ _ _ → isProp→isSet (squash₂ _ _)) λ t u ts →
   cong ∣_∣₂ (swap t u ts)
 
-module Forward {A : Type ℓ} where
+module _ {A : Type ℓ} where
   open MotiveSet
 
-  M : MotiveSet A _ _
-  M .STreeᴹ = STree' A
-  M .SForestᴹ = SForest' A
-  M .isSetSForestᴹ = trunc
-  M ._▸ᴹ_ = _▸_
-  M .[]ᴹ = []
-  M ._∷ᴹ_ = _∷_
-  M .swapᴹ = comm
+  Forward : MotiveSet A _ _
+  Forward .STreeᴹ = STree' A
+  Forward .SForestᴹ = SForest' A
+  Forward .isSetSForestᴹ = trunc
+  Forward ._▸ᴹ_ = _▸_
+  Forward .[]ᴹ = []
+  Forward ._∷ᴹ_ = _∷_
+  Forward .swapᴹ = comm
 
-  open RecSet M public renaming
+  open RecSet Forward public renaming
     (recTreeSet to STree→STree'; recForestSet to SForest→SForest')
-
-open Forward public using (STree→STree'; SForest→SForest')
 
 
 ∥STree∥→STree' : isSet A → ∥ STree A ∥₂ → STree' A
@@ -197,22 +193,20 @@ open Forward public using (STree→STree'; SForest→SForest')
 ∥SForest∥→SForest' : ∥ SForest A ∥₂ → SForest' A
 ∥SForest∥→SForest' = ST.rec trunc SForest→SForest'
 
-module Backward {A : Type ℓ} where
+module _ {A : Type ℓ} where
   open MotiveSet
 
-  M : MotiveSet A _ _
-  M .STreeᴹ = ∥ STree A ∥₂
-  M .SForestᴹ = ∥ SForest A ∥₂
-  M .isSetSForestᴹ = squash₂
-  M ._▸ᴹ_ = _∣▸∣_
-  M .[]ᴹ = ∣[]∣
-  M ._∷ᴹ_ = _∣∷∣_
-  M .swapᴹ = ∣swap∣
+  Backward : MotiveSet A _ _
+  Backward .STreeᴹ = ∥ STree A ∥₂
+  Backward .SForestᴹ = ∥ SForest A ∥₂
+  Backward .isSetSForestᴹ = squash₂
+  Backward ._▸ᴹ_ = _∣▸∣_
+  Backward .[]ᴹ = ∣[]∣
+  Backward ._∷ᴹ_ = _∣∷∣_
+  Backward .swapᴹ = ∣swap∣
 
-  open Rec' M public renaming
+  open Rec' Backward public renaming
     (recTree' to STree'→∥STree∥; recForest' to SForest'→∥SForest∥)
-
-open Backward public using (STree'→∥STree∥; SForest'→∥SForest∥)
 
 
 module _ (ASet : isSet A) where
@@ -230,38 +224,36 @@ module _ (ASet : isSet A) where
     ST.elim2 (λ _ _ → isProp→isSet (trunc _ _)) (λ _ _ → refl)
 
 
-module Section (ASet : isSet A) where
+module _ (ASet : isSet A) where
   open MotiveDepProp'
 
-  M : MotiveDepProp' A _ _
-  M .STreeᴹ t = ∥STree∥→STree' ASet (STree'→∥STree∥ t) ≡ t
-  M .SForestᴹ ts = ∥SForest∥→SForest' (SForest'→∥SForest∥ ts) ≡ ts
-  M .isPropSForestᴹ _ = trunc _ _
-  M ._▸ᴹ_ {ts} ih x =
+  Section : MotiveDepProp' A _ _
+  Section .STreeᴹ t = ∥STree∥→STree' ASet (STree'→∥STree∥ t) ≡ t
+  Section .SForestᴹ ts = ∥SForest∥→SForest' (SForest'→∥SForest∥ ts) ≡ ts
+  Section .isPropSForestᴹ _ = trunc _ _
+  Section ._▸ᴹ_ {ts} ih x =
     ∥STree∥→STree'-arr ASet (SForest'→∥SForest∥ ts) x ∙ cong (_▸ x) ih
-  M .[]ᴹ = refl
-  M ._∷ᴹ_ {t} {ts} ih1 ih2 =
+  Section .[]ᴹ = refl
+  Section ._∷ᴹ_ {t} {ts} ih1 ih2 =
     ∥SForest∥→SForest'-cons ASet (STree'→∥STree∥ t) (SForest'→∥SForest∥ ts)
       ∙ cong₂ _∷_ ih1 ih2
 
-  open ElimProp' M public renaming
+  open ElimProp' Section public renaming
     (elimTreeProp' to sectionTree; elimForestProp' to sectionForest)
 
-open Section public using (sectionTree; sectionForest)
 
-
-module Retract (ASet : isSet A) where
+module _ (ASet : isSet A) where
   open MotiveDepProp
 
-  M : MotiveDepProp A _ _
-  M .STreeᴹ t = STree'→∥STree∥ (STree→STree' t) ≡ ∣ t ∣₂
-  M .SForestᴹ ts = SForest'→∥SForest∥ (SForest→SForest' ts) ≡ ∣ ts ∣₂
-  M .isPropSForestᴹ _ = squash₂ _ _
-  M ._▸ᴹ_ ih x = cong (_∣▸∣ x) ih
-  M .[]ᴹ = refl
-  M ._∷ᴹ_ ih1 ih2 = cong₂ _∣∷∣_ ih1 ih2
+  Retract : MotiveDepProp A _ _
+  Retract .STreeᴹ t = STree'→∥STree∥ (STree→STree' t) ≡ ∣ t ∣₂
+  Retract .SForestᴹ ts = SForest'→∥SForest∥ (SForest→SForest' ts) ≡ ∣ ts ∣₂
+  Retract .isPropSForestᴹ _ = squash₂ _ _
+  Retract ._▸ᴹ_ ih x = cong (_∣▸∣ x) ih
+  Retract .[]ᴹ = refl
+  Retract ._∷ᴹ_ ih1 ih2 = cong₂ _∣∷∣_ ih1 ih2
 
-  open ElimProp M public renaming
+  open ElimProp Retract public renaming
     (elimTreeProp to retractTree'; elimForestProp to retractForest')
 
   retractTree : (t : ∥ STree A ∥₂) →
@@ -271,8 +263,6 @@ module Retract (ASet : isSet A) where
   retractForest : (ts : ∥ SForest A ∥₂) →
     SForest'→∥SForest∥ (∥SForest∥→SForest' ts) ≡ ts
   retractForest = ST.elim (λ _ → isProp→isSet (squash₂ _ _)) retractForest'
-
-open Retract public using (retractTree; retractForest)
 
 
 ∥STree∥IsoSTree' : isSet A → Iso (∥ STree A ∥₂) (STree' A)
