@@ -67,7 +67,7 @@ open MapComp public using (mapTree-∘; mapForest-∘)
 
 open SListProps public using
  (shift; ++-identityˡ; ++-identityʳ; ++-comm; ++-assoc;
-   ++-pentagon; ++-triangle; ++-bigon)
+   ++-pentagon; ++-triangle; ++-hexagon; ++-bigon)
 
 --------------------------------------------------------------------------------
 -- Properties of _▶_

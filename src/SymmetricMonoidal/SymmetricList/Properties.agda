@@ -9,7 +9,7 @@ open import Cubical.Foundations.HLevels using
   (isPropΠ; isPropΠ2; isPropΠ3; isSetΠ; isSetΠ2; isGroupoid×;
     isOfHLevelPathP'; isGroupoidRetract; isSet→isGroupoid; hProp; isSetHProp)
 open import Cubical.Foundations.Path using
-  (flipSquare; compPath→Square; Square→compPath)
+  (flipSquare; compPath→Square; Square→compPath; PathP→compPathR)
 open import Cubical.Data.Empty using (⊥; isProp⊥)
 open import Cubical.Data.Fin.Recursive.Base using (Fin)
 open import Cubical.Data.Fin.Recursive.Properties using (isSetFin)
@@ -30,6 +30,7 @@ private
     A B C : Type ℓ
     x y : A
     xs ys : SList A
+    p q r s t u v : x ≡ y
 
 --------------------------------------------------------------------------------
 -- Basic properties
@@ -39,8 +40,7 @@ private
   where
     f : SList A → hProp ℓ-zero
     f =
-      elimSet
-        (λ _ → isSetHProp)
+      elimSet (λ _ → isSetHProp)
         (⊥ , isProp⊥)
         (λ _ _ → Unit , isPropUnit)
         (λ _ _ _ → refl)
@@ -63,16 +63,14 @@ swap-natural x y =
 map-++ : (f : A → B) (xs ys : SList A) →
   map f (xs ++ ys) ≡ map f xs ++ map f ys
 map-++ f =
-  elimSet
-    (λ _ → isSetΠ λ _ → trunc _ _)
+  elimSet (λ _ → isSetΠ λ _ → trunc _ _)
     (λ _ → refl)
     (λ x ih ys → cong (f x ∷_) (ih ys))
     (λ x y ih j ys i → swap (f x) (f y) (ih ys i) j)
 
 map-id : (xs : SList A) → map (idfun _) xs ≡ xs
 map-id =
-  elimSet
-    (λ _ → trunc _ _)
+  elimSet (λ _ → trunc _ _)
     refl
     (λ x → cong (x ∷_))
     (λ x y ih j i → swap x y (ih i) j)
@@ -80,8 +78,7 @@ map-id =
 map-∘ : (f : B → C) (g : A → B) (xs : SList A) →
   map (f ∘ g) xs ≡ map f (map g xs)
 map-∘ f g =
-  elimSet
-    (λ _ → trunc _ _)
+  elimSet (λ _ → trunc _ _)
     refl
     (λ x → cong (f (g x) ∷_))
     (λ x y ih j i → swap (f (g x)) (f (g y)) (ih i) j)
@@ -91,8 +88,7 @@ map-∘ f g =
 
 shift : (x : A) (xs ys : SList A) → x ∷ xs ++ ys ≡ xs ++ x ∷ ys
 shift x =
-  elimSet
-    (λ _ → isSetΠ λ _ → trunc _ _)
+  elimSet (λ _ → isSetΠ λ _ → trunc _ _)
     (λ _ → refl)
     (λ y {xs} ih ys → swap x y (xs ++ ys) ∙ cong (y ∷_) (ih ys))
     (λ y z {xs} ih i ys → shift-swap y z xs ys (ih ys) i)
@@ -154,8 +150,7 @@ abstract
       (swap x y (xs ++ ys))
       (cong (xs ++_) (swap x y ys))
   shift-hexagon x y =
-    elimProp
-      (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    elimProp (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
       (λ ys →
         pasteS (lUnit refl) (lUnit refl) refl refl
           (flipSquare (refl {x = swap x y ys})))
@@ -244,8 +239,7 @@ abstract
 
 ++-comm : (xs ys : SList A) → xs ++ ys ≡ ys ++ xs
 ++-comm =
-  elimSet
-    (λ _ → isSetΠ λ _ → trunc _ _)
+  elimSet (λ _ → isSetΠ λ _ → trunc _ _)
     (λ ys → sym (++-identityʳ ys))
     (λ x {xs} ih ys → cong (x ∷_) (ih ys) ∙ shift x ys xs)
     (λ x y {xs} ih → funExt λ ys → ++-comm-swap x y xs ys (ih ys))
@@ -296,8 +290,7 @@ abstract
 
 ++-assoc : (xs ys zs : SList A) → (xs ++ ys) ++ zs ≡ xs ++ (ys ++ zs)
 ++-assoc =
-  elimSet
-    (λ _ → isSetΠ2 λ _ _ → trunc _ _)
+  elimSet (λ _ → isSetΠ2 λ _ _ → trunc _ _)
     (λ _ _ → refl)
     (λ x ih ys zs → cong (x ∷_) (ih ys zs))
     (λ x y ih j ys zs i → swap x y (ih ys zs i) j)
@@ -312,12 +305,11 @@ abstract
         ∙∙ ++-assoc xs (ys ++ zs) ws
         ∙∙ cong (xs ++_) (++-assoc ys zs ws))
   ++-pentagon =
-    elimProp
-      (λ _ → isPropΠ3 λ _ _ _ → trunc _ _ _ _)
+    elimProp (λ _ → isPropΠ3 λ _ _ _ → trunc _ _ _ _)
       (λ ys zs ws → sym (rUnit _) ∙ lUnit _)
       (λ x ih ys zs ws →
         sym (cong-∙ (x ∷_) _ _)
-          ∙∙ cong (cong (x ∷_)) (ih ys zs ws)
+          ∙∙ congSquare (x ∷_) (ih ys zs ws)
           ∙∙ cong-∙∙ (x ∷_) _ _ _)
 
   ++-triangle : (xs ys : SList A) →
@@ -327,71 +319,208 @@ abstract
       refl
       (cong (xs ++_) (++-identityˡ ys))
   ++-triangle =
-    elimProp
-      (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+    elimProp (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
       (λ _ → refl)
       (λ x ih ys → cong (cong (x ∷_)) (ih ys))
 
-  -- ++-hexagon : (xs ys zs : SList A) →
-  --   Path ((xs ++ ys) ++ zs ≡ ys ++ (zs ++ xs))
-  --     (++-assoc xs ys zs ∙∙ ++-comm xs (ys ++ zs) ∙∙ ++-assoc ys zs xs)
-  --     (cong (_++ zs) (++-comm xs ys) ∙∙ ++-assoc ys xs zs ∙∙ cong (ys ++_) (++-comm xs zs))
-  -- ++-hexagon =
-  --   elimProp
-  --     (λ _ → isPropΠ2 λ _ _ → trunc _ _ _ _)
-  --     (elimProp
-  --       (λ _ → isPropΠ λ _ → trunc _ _ _ _)
-  --       (λ _ → sym (rUnit _) ∙ lUnit _)
-  --       (λ y ih' zs →
-  --         sym (cong-∙∙ (y ∷_) _ _ _)
-  --           ∙∙ cong (cong (y ∷_)) (ih' zs)
-  --           ∙∙ cong-∙∙ (y ∷_) _ _ _))
-  --     (λ x {xs} ih ys zs →
-  --       let fill1 : Path (x ∷ (xs ++ ys) ++ zs ≡ x ∷ ys ++ zs ++ xs)
-  --             (cong (x ∷_) (++-assoc xs ys zs)
-  --               ∙∙ cong (x ∷_) (++-comm xs (ys ++ zs))
-  --               ∙∙ cong (x ∷_) (++-assoc ys zs xs))
-  --             (cong (λ ws → x ∷ ws ++ zs) (++-comm xs ys)
-  --               ∙∙ cong (x ∷_) (++-assoc ys xs zs)
-  --               ∙∙ cong (λ ws → x ∷ ys ++ ws) (++-comm xs zs))
-  --           fill1 =
-  --             sym (cong-∙∙ (x ∷_) _ _ _)
-  --               ∙∙ cong (cong (x ∷_)) (ih ys zs)
-  --               ∙∙ cong-∙∙ (x ∷_) _ _ _
+  comm-assoc-shift : (x : A) (xs ys zs : SList A) →
+    Square
+      (cong (x ∷_) (++-assoc ys xs zs)
+        ∙∙ cong (λ ws → x ∷ ys ++ ws) (++-comm xs zs)
+        ∙∙ sym (cong (x ∷_) (++-assoc ys zs xs)))
+      (cong (λ ws → ys ++ x ∷ ws) (++-comm xs zs)
+        ∙ cong (ys ++_) (shift x zs xs))
+      (cong (_++ zs) (shift x ys xs)
+        ∙ ++-assoc ys (x ∷ xs) zs)
+      (shift x (ys ++ zs) xs ∙ ++-assoc ys zs (x ∷ xs))
+  comm-assoc-shift x xs =
+    elimProp (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+      (λ zs →
+        let filler : Square
+              (cong (x ∷_) (++-comm xs zs))
+              (cong (x ∷_) (++-comm xs zs) ∙ shift x zs xs)
+              refl
+              (shift x zs xs)
+            filler = compPath→Square (sym (lUnit _))
+            goal : Square
+              (cong (x ∷_) (++-comm xs zs) ∙ refl)
+              (cong (x ∷_) (++-comm xs zs) ∙ shift x zs xs)
+              (refl ∙ refl)
+              (shift x zs xs ∙ refl)
+            goal = pasteS (rUnit _) refl (rUnit _) (rUnit _) filler
+          in goal)
+      (λ y {ys} ih zs →
+        let filler0 : Square
+              (cong (λ ws → x ∷ y ∷ ws) (++-assoc ys xs zs)
+                ∙∙ cong (λ ws → x ∷ y ∷ ys ++ ws) (++-comm xs zs)
+                ∙∙ sym (cong (λ ws → x ∷ y ∷ ws) (++-assoc ys zs xs)))
+              (cong (λ ws → y ∷ x ∷ ws) (++-assoc ys xs zs)
+                ∙∙ cong (λ ws → y ∷ x ∷ ys ++ ws) (++-comm xs zs)
+                ∙∙ sym (cong (λ ws → y ∷ x ∷ ws) (++-assoc ys zs xs)))
+              (swap x y ((ys ++ xs) ++ zs))
+              (swap x y ((ys ++ zs) ++ xs))
+            filler0 =
+              pasteS
+                (cong-∙∙ (λ ws → x ∷ y ∷ ws) _ _ _)
+                (cong-∙∙ (λ ws → y ∷ x ∷ ws) _ _ _)
+                refl refl
+                (flipSquare
+                  (swap-natural x y
+                    (++-assoc ys xs zs
+                      ∙∙ cong (ys ++_) (++-comm xs zs)
+                      ∙∙ sym (++-assoc ys zs xs))))
 
-  --           fill2 : Square
-  --             (cong (x ∷_) (++-assoc ys xs zs)
-  --               ∙ cong (λ ws → x ∷ ys ++ ws) (++-comm xs zs)
-  --               ∙ sym (cong (x ∷_) (++-assoc ys zs xs)))
-  --             (++-assoc ys (x ∷ xs) zs
-  --               ∙ cong (λ ws → ys ++ x ∷ ws) (++-comm xs zs)
-  --               ∙ cong (ys ++_) (shift x zs xs)
-  --               ∙ sym (++-assoc ys zs (x ∷ xs)))
-  --             (cong (_++ zs) (shift x ys xs))
-  --             (shift x (ys ++ zs) xs)
-  --           fill2 = {!   !}
+            filler1 : Square
+              (cong (λ ws → y ∷ x ∷ ws) (++-assoc ys xs zs)
+                ∙∙ cong (λ ws → y ∷ x ∷ ys ++ ws) (++-comm xs zs)
+                ∙∙ sym (cong (λ ws → y ∷ x ∷ ws) (++-assoc ys zs xs)))
+              (cong (λ ws → y ∷ ys ++ x ∷ ws) (++-comm xs zs)
+                ∙ cong (λ ws → y ∷ ys ++ ws) (shift x zs xs))
+              (cong (λ ws → y ∷ ws ++ zs) (shift x ys xs)
+                ∙ cong (y ∷_) (++-assoc ys (x ∷ xs) zs))
+              (cong (y ∷_) (shift x (ys ++ zs) xs)
+                ∙ cong (y ∷_) (++-assoc ys zs (x ∷ xs)))
+            filler1 =
+              pasteS
+                (cong-∙∙ (y ∷_) _ _ _) (cong-∙ (y ∷_) _ _)
+                (cong-∙ (y ∷_) _ _) (cong-∙ (y ∷_) _ _)
+                (congSquare (y ∷_) (ih zs))
 
-  --           goal : Path (x ∷ (xs ++ ys) ++ zs ≡ ys ++ zs ++ x ∷ xs)
-  --             (cong (x ∷_) (++-assoc xs ys zs)
-  --               ∙∙ (cong (x ∷_) (++-comm xs (ys ++ zs)) ∙ shift x (ys ++ zs) xs)
-  --               ∙∙ ++-assoc ys zs (x ∷ xs))
-  --             (cong (_++ zs) (cong (x ∷_) (++-comm xs ys) ∙ shift x ys xs)
-  --               ∙∙ ++-assoc ys (x ∷ xs) zs
-  --               ∙∙ cong (ys ++_) (cong (x ∷_) (++-comm xs zs) ∙ shift x zs xs))
-  --           goal = {!   !}
-  --        in goal)
+            filler2 : Path _
+              (cong (_++ zs) (swap x y (ys ++ xs))
+                ∙ cong (λ ws → y ∷ ws ++ zs) (shift x ys xs)
+                ∙ cong (y ∷_) (++-assoc ys (x ∷ xs) zs))
+              (cong (_++ zs) (swap x y (ys ++ xs) ∙ cong (y ∷_) (shift x ys xs))
+                ∙ cong (y ∷_) (++-assoc ys (x ∷ xs) zs))
+            filler2 =
+              assoc _ _ _
+                ∙ sym
+                    (cong
+                      (_∙ cong (y ∷_) (++-assoc ys (x ∷ xs) zs))
+                      (cong-∙ (_++ zs)
+                        (swap x y (ys ++ xs)) (cong (y ∷_) (shift x ys xs))))
+
+            filler3 : Path _
+              (swap x y ((ys ++ zs) ++ xs)
+                ∙ cong (y ∷_) (shift x (ys ++ zs) xs)
+                ∙ cong (y ∷_) (++-assoc ys zs (x ∷ xs)))
+              ((swap x y ((ys ++ zs) ++ xs)
+                  ∙ cong (y ∷_) (shift x (ys ++ zs) xs))
+                ∙ cong (y ∷_) (++-assoc ys zs (x ∷ xs)))
+            filler3 = assoc _ _ _
+
+            goal : Square
+              (cong (λ ws → x ∷ y ∷ ws) (++-assoc ys xs zs)
+                ∙∙ cong (λ ws → x ∷ y ∷ ys ++ ws) (++-comm xs zs)
+                ∙∙ sym (cong (λ ws → x ∷ y ∷ ws) (++-assoc ys zs xs)))
+              (cong (λ ws → y ∷ ys ++ x ∷ ws) (++-comm xs zs)
+                ∙ cong (λ ws → y ∷ ys ++ ws) (shift x zs xs))
+              (cong (_++ zs) (swap x y (ys ++ xs) ∙ cong (y ∷_) (shift x ys xs))
+                ∙ cong (y ∷_) (++-assoc ys (x ∷ xs) zs))
+              ((swap x y ((ys ++ zs) ++ xs) ∙ cong (y ∷_) (shift x (ys ++ zs) xs))
+                ∙ cong (y ∷_) (++-assoc ys zs (x ∷ xs)))
+            goal = pasteS refl refl filler2 filler3 (filler0 ∙v filler1)
+         in goal)
+
+  ++-hexagon' : (xs ys zs : SList A) →
+    Square
+      (++-assoc xs ys zs)
+      (++-assoc ys xs zs ∙ cong (ys ++_) (++-comm xs zs))
+      (cong (_++ zs) (++-comm xs ys))
+      (++-comm xs (ys ++ zs) ∙ ++-assoc ys zs xs)
+  ++-hexagon' =
+    elimProp (λ _ → isPropΠ2 λ _ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+      (elimProp (λ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (trunc _ _) _ _)
+        (λ _ → compPath→Square (sym (lUnit _) ∙ cong (refl ∙_) (rUnit _)))
+        (λ y {ys} ih zs →
+          pasteS refl (cong-∙ (y ∷_) _ _) refl (cong-∙ (y ∷_) _ _)
+            (congSquare (y ∷_) (ih zs))))
+      (λ x {xs} ih ys zs →
+        let filler0 : Square
+              (cong (x ∷_) (++-assoc xs ys zs))
+              (cong (x ∷_) (++-assoc ys xs zs)
+                ∙∙ cong (λ ws → x ∷ ys ++ ws) (++-comm xs zs)
+                ∙∙ sym (cong (x ∷_) (++-assoc ys zs xs)))
+              (cong (λ ws → x ∷ ws ++ zs) (++-comm xs ys))
+              (cong (x ∷_) (++-comm xs (ys ++ zs)))
+            filler0 =
+              lemma1
+                (pasteS refl (cong-∙ (x ∷_) _ _) refl (cong-∙ (x ∷_) _ _)
+                  (congSquare (x ∷_) (ih ys zs)))
+
+            filler1 : Square
+              (cong (x ∷_) (++-assoc ys xs zs)
+                ∙∙ cong (λ ws → x ∷ ys ++ ws) (++-comm xs zs)
+                ∙∙ sym (cong (x ∷_) (++-assoc ys zs xs)))
+              (cong (λ ws → ys ++ x ∷ ws) (++-comm xs zs)
+                ∙ cong (ys ++_) (shift x zs xs))
+              (cong (_++ zs) (shift x ys xs)
+                ∙ ++-assoc ys (x ∷ xs) zs)
+              (shift x (ys ++ zs) xs ∙ ++-assoc ys zs (x ∷ xs))
+            filler1 = comm-assoc-shift x xs ys zs
+
+            goal : Square
+              (cong (x ∷_) (++-assoc xs ys zs))
+              (++-assoc ys (x ∷ xs) zs
+                ∙ cong (ys ++_)
+                    (cong (x ∷_) (++-comm xs zs) ∙ shift x zs xs))
+              (cong (_++ zs) (cong (x ∷_) (++-comm xs ys) ∙ shift x ys xs))
+              ((cong (x ∷_) (++-comm xs (ys ++ zs))
+                  ∙ shift x (ys ++ zs) xs)
+                ∙ ++-assoc ys zs (x ∷ xs))
+            goal =
+              pasteS
+                refl
+                (cong (++-assoc ys (x ∷ xs) zs ∙_) (sym (cong-∙ (ys ++_) _ _)))
+                (sym (cong-∙ (_++ zs) (cong (x ∷_) (++-comm xs ys)) (shift x ys xs)))
+                (assoc _ _ _)
+                (lemma2 (filler0 ∙v filler1))
+         in goal)
+    where
+      lemma1 : Square p (q ∙ r) s (t ∙ u) → Square p (q ∙∙ r ∙∙ sym u) s t
+      lemma1 {p = p} {q = q} {r = r} {s = s} {t = t} {u = u} P j i =
+        hcomp
+          (λ where
+            k (j = i0) → p i
+            k (j = i1) →
+              (compPath-filler (q ∙ r) (sym u)
+                ▷ sym (doubleCompPath-elim _ _ _))
+              k i
+            k (i = i0) → s j
+            k (i = i1) → compPath-filler t u (~ k) j)
+          (P j i)
+
+      lemma2 : Square p (q ∙ r) (s ∙ t ∙ u) v → Square p (u ∙ q ∙ r) (s ∙ t) v
+      lemma2 {p = p} {q = q} {r = r} {s = s} {t = t} {u = u} {v = v} P j i =
+        hcomp
+          (λ where
+            k (j = i0) → p i
+            k (j = i1) → compPath-filler' u (q ∙ r) k i
+            k (i = i0) → (assoc s t u ◁ symP (compPath-filler _ _)) k j
+            k (i = i1) → v j)
+          (P j i)
+
+  ++-hexagon : (xs ys zs : SList A) →
+    Path _
+      (++-assoc xs ys zs
+        ∙∙ ++-comm xs (ys ++ zs)
+        ∙∙ ++-assoc ys zs xs)
+      (cong (_++ zs) (++-comm xs ys)
+        ∙∙ ++-assoc ys xs zs
+        ∙∙ cong (ys ++_) (++-comm xs zs))
+  ++-hexagon xs ys zs =
+    doubleCompPath-elim' _ _ _
+    ◁ sym (Square→compPath (++-hexagon' xs ys zs)) ▷
+    sym (doubleCompPath-elim' _ _ _)
 
   ++-bigon : (xs ys : SList A) → ++-comm xs ys ≡ sym (++-comm ys xs)
   ++-bigon =
-    elimProp
-      (λ _ → isPropΠ λ _ → trunc _ _ _ _)
-      (elimProp
-        (λ _ → trunc _ _ _ _)
+    elimProp (λ _ → isPropΠ λ _ → trunc _ _ _ _)
+      (elimProp (λ _ → trunc _ _ _ _)
         refl
         (λ y ih → cong (cong (y ∷_)) ih ∙ rUnit _))
       (λ x {xs} ih →
-        elimProp
-          (λ _ → trunc _ _ _ _)
+        elimProp (λ _ → trunc _ _ _ _)
           (sym (rUnit _) ∙ cong (cong (x ∷_)) (ih []))
           (λ y {ys} ih' →
             let filler1 : Path _
