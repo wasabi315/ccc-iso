@@ -22,6 +22,7 @@ open import Cubical.Foundations.Extra using
   (doubleCompPaths→Square; doubleCompPaths→Square'; Square→doubleCompPath';
     paste; pasteS; _∙h_; _∙v_; congSquare; ∙-extendL; ∙-extendR')
 
+open import SymmetricMonoidal.GroupoidStructure
 open import SymmetricMonoidal.SymmetricList
 
 private
@@ -591,6 +592,22 @@ abstract
                       ∙h pasteS refl filler5 filler3 refl filler4
                       ∙h pasteS refl filler7 refl refl filler6)
             in goal))
+
+symmetricMonoidalGroupoid : (A : Type ℓ) → SymmetricMonoidalGroupoid ℓ
+symmetricMonoidalGroupoid A = record
+  { Carrier = SList A
+  ; isGroupoidCarrier = trunc
+  ; ⊤ = []
+  ; _*_ = _++_
+  ; *-identityˡ = ++-identityˡ
+  ; *-identityʳ = ++-identityʳ
+  ; *-comm = ++-comm
+  ; *-assoc = ++-assoc
+  ; *-bigon = ++-bigon
+  ; *-triangle = ++-triangle
+  ; *-pentagon = ++-pentagon
+  ; *-hexagon = ++-hexagon
+  }
 
 --------------------------------------------------------------------------------
 -- Other properties

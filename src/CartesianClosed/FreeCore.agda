@@ -7,6 +7,8 @@ open import Cubical.Foundations.HLevels using
 open import Cubical.Foundations.Extra using
   (doubleCompPathP; doubleCompPathP≡doubleCompPath; compPathP'≡compPath)
 
+open import SymmetricMonoidal.GroupoidStructure
+
 private
   variable
     ℓ : Level
@@ -369,3 +371,21 @@ module _ (M : Motive A ℓ) where
       (λ i → rec (p i)) (λ i → rec (q i))
       (λ i j → rec (P i j)) (λ i j → rec (Q i j))
       i j k
+
+--------------------------------------------------------------------------------
+
+symmetricMonoidalGroupoid : (A : Type ℓ) → SymmetricMonoidalGroupoid ℓ
+symmetricMonoidalGroupoid A = record
+  { Carrier = FreeCore A
+  ; isGroupoidCarrier = trunc
+  ; ⊤ = ⊤
+  ; _*_ = _*_
+  ; *-identityˡ = *-identityˡ
+  ; *-identityʳ = *-identityʳ
+  ; *-comm = *-comm
+  ; *-assoc = *-assoc
+  ; *-bigon = *-bigon
+  ; *-triangle = *-triangle
+  ; *-pentagon = *-pentagon
+  ; *-hexagon = *-hexagon
+  }
