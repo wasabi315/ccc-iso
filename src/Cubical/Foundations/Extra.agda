@@ -18,7 +18,7 @@ private
 infixr 30 _∙h_
 
 --------------------------------------------------------------------------------
--- Combinators for double composition
+-- Combinators for composition
 
 doubleCompPathP : {B : A → Type ℓ} →
   {s : B x} {t : B y} {u : B z} {v : B w} →
@@ -55,6 +55,19 @@ doubleCompPathP-filler {B = B} {p = p} {q = q} {r = r} P Q R j i =
       k (i = i1) → R k)
     (inS (Q i))
     j
+
+compPathP'≡compPath :
+  (p : Path A x y) (q : Path A y z) →
+  compPathP' {p = p} {q = q} p q ≡ (p ∙ q)
+compPathP'≡compPath {A = A} {x = x} p q j i =
+  comp
+    (λ _ → A)
+    (λ where
+      k (i = i0) → x
+      k (i = i1) → q k
+      k (j = i0) → compPathP'-filler {p = p} {q = q} p q k i
+      k (j = i1) → compPath-filler p q k i)
+    (p i)
 
 -- doubleCompPathP agrees with _∙∙_∙∙_ on non-dependent paths
 doubleCompPathP≡doubleCompPath :

@@ -64,6 +64,7 @@ record MotiveDep' (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ (ℓ
         (tᴹ ∷ᴹ (uᴹ ∷ᴹ tsᴹ))
         (uᴹ ∷ᴹ (tᴹ ∷ᴹ tsᴹ))
 
+
 module ElimSet' (M : MotiveDep' A ℓ′ ℓ″) where
   open MotiveDep' M
 
@@ -113,9 +114,11 @@ record MotiveDepProp' (A : Type ℓ) ℓ′ ℓ″ : Type (ℓ-suc (ℓ-max ℓ 
     ; swapᴹ = swapᴹ
     }
 
+
 module ElimProp' (M : MotiveDepProp' A ℓ′ ℓ″) where
   open ElimSet' (MotiveDepProp'.motiveDep M) public renaming
     (elimTree' to elimTreeProp'; elimForest' to elimForestProp')
+
 
 module Rec' (M : MotiveSet A ℓ′ ℓ″) where
   open MotiveSet M
@@ -187,6 +190,7 @@ module Forward {A : Type ℓ} where
 
 open Forward public using (STree→STree'; SForest→SForest')
 
+
 ∥STree∥→STree' : isSet A → ∥ STree A ∥₂ → STree' A
 ∥STree∥→STree' ASet = ST.rec (isSetSTree' ASet) STree→STree'
 
@@ -210,6 +214,7 @@ module Backward {A : Type ℓ} where
 
 open Backward public using (STree'→∥STree∥; SForest'→∥SForest∥)
 
+
 module _ (ASet : isSet A) where
 
   ∥STree∥→STree'-arr : (ts : ∥ SForest A ∥₂) (x : A) →
@@ -223,6 +228,7 @@ module _ (ASet : isSet A) where
       ≡ (∥STree∥→STree' ASet t ∷ ∥SForest∥→SForest' ts)
   ∥SForest∥→SForest'-cons =
     ST.elim2 (λ _ _ → isProp→isSet (trunc _ _)) (λ _ _ → refl)
+
 
 module Section (ASet : isSet A) where
   open MotiveDepProp'
@@ -242,6 +248,7 @@ module Section (ASet : isSet A) where
     (elimTreeProp' to sectionTree; elimForestProp' to sectionForest)
 
 open Section public using (sectionTree; sectionForest)
+
 
 module Retract (ASet : isSet A) where
   open MotiveDepProp
@@ -266,6 +273,7 @@ module Retract (ASet : isSet A) where
   retractForest = ST.elim (λ _ → isProp→isSet (squash₂ _ _)) retractForest'
 
 open Retract public using (retractTree; retractForest)
+
 
 ∥STree∥IsoSTree' : isSet A → Iso (∥ STree A ∥₂) (STree' A)
 ∥STree∥IsoSTree' ASet =
