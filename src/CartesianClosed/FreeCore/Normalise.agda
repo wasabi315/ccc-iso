@@ -2,16 +2,18 @@ module CartesianClosed.FreeCore.Normalise where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
+open import Cubical.Foundations.HLevels using (isSetΠ)
 open import Cubical.Foundations.GroupoidLaws using
   (cong-∙∙; cong-∙; rUnit; lUnit)
 open import Cubical.Foundations.Isomorphism using (Iso; iso; isoToPath)
 
 open import Cubical.Foundations.Extra using (pasteS)
 
-import CartesianClosed.FreeCore as FC
-import CartesianClosed.FreeCore.Properties as FC
-import CartesianClosed.SymmetricTree as ST
-import CartesianClosed.SymmetricTree.Properties as ST
+open import CartesianClosed.FreeCore as FC hiding (Motive; MotiveDepSet)
+open import CartesianClosed.FreeCore.Properties
+open import CartesianClosed.SymmetricTree as ST hiding (Motive; MotiveDepSet)
+open import CartesianClosed.SymmetricTree.Properties
+import SymmetricMonoidal.SymmetricList as SList
 
 private
   variable
@@ -22,121 +24,152 @@ private
 
 module _ {A : Type ℓ} where
   open FC.Motive
-  open ST.Motive
 
-  NormaliseMotive : FC.Motive A ℓ
-  NormaliseMotive .FreeCoreᴹ = ST.SForest A
-  NormaliseMotive .isGroupoidFreeCoreᴹ = ST.trunc
-  NormaliseMotive .ιᴹ = ST.ι
-  NormaliseMotive .⊤ᴹ = ST.[]
-  NormaliseMotive ._*ᴹ_ = ST._++_
-  NormaliseMotive ._⇒ᴹ_ = ST._▶_
-  NormaliseMotive .*-identityˡᴹ = ST.++-identityˡ
-  NormaliseMotive .*-identityʳᴹ = ST.++-identityʳ
-  NormaliseMotive .*-commᴹ = ST.++-comm
-  NormaliseMotive .*-assocᴹ = ST.++-assoc
-  NormaliseMotive .⇒-identityˡᴹ = ST.▶-identityˡ
-  NormaliseMotive .⇒-curryᴹ = ST.▶-curry
-  NormaliseMotive .⇒-annihilʳᴹ = ST.▶-annihilʳ
-  NormaliseMotive .⇒-distribˡᴹ = ST.▶-distribˡ
-  NormaliseMotive .*-bigonᴹ = ST.++-bigon
-  NormaliseMotive .*-triangleᴹ = ST.++-triangle
-  NormaliseMotive .*-pentagonᴹ = ST.++-pentagon
-  NormaliseMotive .*-hexagonᴹ = ST.++-hexagon
+  Normalise : FC.Motive A ℓ
+  Normalise .FreeCoreᴹ = SForest A
+  Normalise .isGroupoidFreeCoreᴹ = trunc
+  Normalise .ιᴹ = ST.ι
+  Normalise .⊤ᴹ = []
+  Normalise ._*ᴹ_ = _++_
+  Normalise ._⇒ᴹ_ = _▶_
+  Normalise .*-identityˡᴹ = ++-identityˡ
+  Normalise .*-identityʳᴹ = ++-identityʳ
+  Normalise .*-commᴹ = ++-comm
+  Normalise .*-assocᴹ = ++-assoc
+  Normalise .⇒-identityˡᴹ = ▶-identityˡ
+  Normalise .⇒-curryᴹ = ▶-curry
+  Normalise .⇒-annihilʳᴹ = ▶-annihilʳ
+  Normalise .⇒-distribˡᴹ = ▶-distribˡ
+  Normalise .*-bigonᴹ = ++-bigon
+  Normalise .*-triangleᴹ = ++-triangle
+  Normalise .*-pentagonᴹ = ++-pentagon
+  Normalise .*-hexagonᴹ = ++-hexagon
 
-  normalise : FC.FreeCore A → ST.SForest A
-  normalise = FC.rec NormaliseMotive
-
-  QuoteMotive : ST.Motive A ℓ ℓ
-  QuoteMotive .STreeᴹ = FC.FreeCore A
-  QuoteMotive .SForestᴹ = FC.FreeCore A
-  QuoteMotive .isGroupoidSForestᴹ = FC.trunc
-  QuoteMotive ._▸ᴹ_ t x = t FC.⇒ FC.ι x
-  QuoteMotive .[]ᴹ = FC.⊤
-  QuoteMotive ._∷ᴹ_ = FC._*_
-  QuoteMotive .swapᴹ = FC.*-swap
-  QuoteMotive .involᴹ = {!   !}
-  QuoteMotive .ybeᴹ = {!   !}
-
-  open ST.Rec QuoteMotive public renaming
-    (recTree to quoteTree; recForest to quoteForest)
+  ↑_ : FreeCore A → SForest A
+  ↑_ = FC.rec Normalise
 
 
 module _ {A : Type ℓ} where
-  open FC.MotiveDepSet
+  open ST.Motive
+
+  Readback : ST.Motive A ℓ ℓ
+  Readback .STreeᴹ = FreeCore A
+  Readback .SForestᴹ = FreeCore A
+  Readback .isGroupoidSForestᴹ = trunc
+  Readback ._▸ᴹ_ t x = t ⇒ FC.ι x
+  Readback .[]ᴹ = ⊤
+  Readback ._∷ᴹ_ = _*_
+  Readback .swapᴹ = *-swap
+  Readback .involᴹ = {!   !}
+  Readback .ybeᴹ = {!   !}
+
+  open ST.Rec Readback public renaming
+    (recTree to ↓ᵗ_; recForest to ↓ᶠ_)
+
+
+module _ {A : Type ℓ} where
   open ST.MotiveDepSet
 
-  SectionMotive : ST.MotiveDepSet A ℓ ℓ
-  SectionMotive .STreeᴹ t = normalise (quoteTree t) ≡ ST.[ t ]
-  SectionMotive .SForestᴹ ts = normalise (quoteForest ts) ≡ ts
-  SectionMotive .isSetSForestᴹ _ = ST.trunc _ _
-  SectionMotive ._▸ᴹ_ ih x = cong (ST.[_] ∘ (ST._▸ x)) (ST.++-identityʳ _ ∙ ih)
-  SectionMotive .[]ᴹ = refl
-  SectionMotive ._∷ᴹ_ ih1 ih2 = cong₂ ST._++_ ih1 ih2
-  SectionMotive .swapᴹ {t} {u} {ts} ih1 ih2 ih3 = goal
+  Section : ST.MotiveDepSet A ℓ ℓ
+  Section .STreeᴹ t = ↑ ↓ᵗ t ≡ [ t ]
+  Section .SForestᴹ ts = ↑ ↓ᶠ ts ≡ ts
+  Section .isSetSForestᴹ _ = trunc _ _
+  Section ._▸ᴹ_ ih x = cong ([_] ∘ (_▸ x)) (++-identityʳ _ ∙ ih)
+  Section .[]ᴹ = refl
+  Section ._∷ᴹ_ ih1 ih2 = cong₂ _++_ ih1 ih2
+  Section .swapᴹ {t} {u} {ts} ih1 ih2 ih3 = goal
     where
-      nqTree : ST.STree A → ST.SForest A
-      nqTree = normalise ∘ quoteTree
-
-      nqForest : ST.SForest A → ST.SForest A
-      nqForest = normalise ∘ quoteForest
-
       filler : Square
-        (cong₃ (λ us vs ws → us ST.++ vs ST.++ ws) ih1 ih2 ih3)
-        (cong₃ (λ us vs ws → us ST.++ vs ST.++ ws) ih2 ih1 ih3)
-        (sym (ST.++-assoc (nqTree t) (nqTree u) (nqForest ts))
-          ∙∙ cong (ST._++ nqForest ts) (ST.++-comm (nqTree t) (nqTree u))
-          ∙∙ ST.++-assoc (nqTree u) (nqTree t) (nqForest ts))
-        (cong (ST._++ ts) (refl ∙ ST.swap t u ST.[] ∙ refl) ∙ refl)
-      filler j i = ST.++-swap (ih1 i) (ih2 i) (ih3 i) j
+        (cong₃ (λ us vs ws → us ++ vs ++ ws) ih1 ih2 ih3)
+        (cong₃ (λ us vs ws → us ++ vs ++ ws) ih2 ih1 ih3)
+        (sym (++-assoc (↑ ↓ᵗ t) (↑ ↓ᵗ u) (↑ ↓ᶠ ts))
+          ∙∙ cong (_++ ↑ ↓ᶠ ts) (++-comm (↑ ↓ᵗ t) (↑ ↓ᵗ u))
+          ∙∙ ++-assoc (↑ ↓ᵗ u) (↑ ↓ᵗ t) (↑ ↓ᶠ ts))
+        (cong (_++ ts) (refl ∙ swap t u [] ∙ refl) ∙ refl)
+      filler j i = ++-swap (ih1 i) (ih2 i) (ih3 i) j
 
       goal : Square
-        (cong₃ (λ us vs ws → us ST.++ vs ST.++ ws) ih1 ih2 ih3)
-        (cong₃ (λ us vs ws → us ST.++ vs ST.++ ws) ih2 ih1 ih3)
-        (cong normalise
-          (sym (FC.*-assoc (quoteTree t) (quoteTree u) (quoteForest ts))
-            ∙∙ cong (FC._* quoteForest ts) (FC.*-comm (quoteTree t) (quoteTree u))
-            ∙∙ FC.*-assoc (quoteTree u) (quoteTree t) (quoteForest ts)))
-        (ST.swap t u ts)
+        (cong₃ (λ us vs ws → us ++ vs ++ ws) ih1 ih2 ih3)
+        (cong₃ (λ us vs ws → us ++ vs ++ ws) ih2 ih1 ih3)
+        (cong ↑_
+          (sym (*-assoc (↓ᵗ t) (↓ᵗ u) (↓ᶠ ts))
+            ∙∙ cong (_* ↓ᶠ ts) (*-comm (↓ᵗ t) (↓ᵗ u))
+            ∙∙ *-assoc (↓ᵗ u) (↓ᵗ t) (↓ᶠ ts)))
+        (swap t u ts)
       goal =
         pasteS refl refl
           (sym
-            (cong-∙∙ normalise
-              (sym (FC.*-assoc (quoteTree t) (quoteTree u) (quoteForest ts)))
-              (cong (FC._* quoteForest ts) (FC.*-comm (quoteTree t) (quoteTree u)))
-              (FC.*-assoc (quoteTree u) (quoteTree t) (quoteForest ts))))
+            (cong-∙∙ ↑_
+              (sym (*-assoc (↓ᵗ t) (↓ᵗ u) (↓ᶠ ts)))
+              (cong (_* ↓ᶠ ts) (*-comm (↓ᵗ t) (↓ᵗ u)))
+              (*-assoc (↓ᵗ u) (↓ᵗ t) (↓ᶠ ts))))
           (sym (rUnit _)
-            ∙ cong-∙ (ST._++ ts) refl (ST.swap t u ST.[] ∙ refl)
+            ∙ cong-∙ (_++ ts) refl (swap t u [] ∙ refl)
             ∙ sym (lUnit _)
-            ∙ cong-∙ (ST._++ ts) (ST.swap t u ST.[]) refl
+            ∙ cong-∙ (_++ ts) (swap t u []) refl
             ∙ sym (rUnit _))
           filler
 
-  open ST.ElimSet SectionMotive public renaming
-    (elimTreeSet to sectionTree; elimForestSet to sectionForest)
+  open ST.ElimSet Section public renaming
+    (elimTreeSet to ↑↓ᵗ; elimForestSet to ↑↓ᶠ)
 
-  RetractMotive : FC.MotiveDepSet A ℓ
-  RetractMotive .FreeCoreᴹ t = quoteForest (normalise t) ≡ t
-  RetractMotive .isSetFreeCoreᴹ _ = FC.trunc _ _
-  RetractMotive .ιᴹ = {!   !}
-  RetractMotive .⊤ᴹ = {!   !}
-  RetractMotive ._*ᴹ_ = {!   !}
-  RetractMotive ._⇒ᴹ_ = {!   !}
-  RetractMotive .*-identityˡᴹ = {!   !}
-  RetractMotive .*-identityʳᴹ = {!   !}
-  RetractMotive .*-commᴹ = {!   !}
-  RetractMotive .*-assocᴹ = {!   !}
-  RetractMotive .⇒-identityˡᴹ = {!   !}
-  RetractMotive .⇒-curryᴹ = {!   !}
-  RetractMotive .⇒-annihilʳᴹ = {!   !}
-  RetractMotive .⇒-distribˡᴹ = {!   !}
+↓-homo-++ : (ts us : SForest A) → ↓ᶠ ts * ↓ᶠ us ≡ ↓ᶠ (ts ++ us)
+↓-homo-++ =
+  SList.elimSet (λ _ → isSetΠ λ _ → trunc _ _)
+    (λ _ → *-identityˡ _)
+    (λ t ih us → *-assoc _ _ _ ∙ cong (↓ᵗ t *_) (ih us))
+    {!   !}
 
-  retract : (t : FC.FreeCore A) → quoteForest (normalise t) ≡ t
-  retract = FC.elimSet RetractMotive
+↓-homo-► : (ts : SForest A) (t : STree A) → ↓ᶠ ts ⇒ ↓ᵗ t ≡ ↓ᵗ (ts ► t)
+↓-homo-► ts (us ▸ x) =
+  ⇒-curry _ _ _ ∙ cong (_⇒ FreeCore.ι x) (↓-homo-++ ts us)
+
+↓-homo-▶ : (ts us : SForest A) → ↓ᶠ ts ⇒ ↓ᶠ us ≡ ↓ᶠ (ts ▶ us)
+↓-homo-▶ ts =
+  SList.elimSet (λ _ → trunc _ _)
+    (⇒-annihilʳ _)
+    (λ u ih → ⇒-distribˡ _ _ _ ∙ cong₂ _*_ (↓-homo-► ts u) ih)
+    {!   !}
+
+module _ {A : Type ℓ} where
+  open FC.MotiveDepSet
+
+  Retract : FC.MotiveDepSet A ℓ
+  Retract .FreeCoreᴹ t = t ≡ ↓ᶠ ↑ t
+  Retract .isSetFreeCoreᴹ _ = trunc _ _
+  Retract .ιᴹ x = ⇒-identityˡ _ ∙ sym (*-identityʳ _)
+  Retract .⊤ᴹ = refl
+  Retract ._*ᴹ_ {t} {u} ih1 ih2 = cong₂ _*_ ih1 ih2 ∙ ↓-homo-++ (↑ t) (↑ u)
+  Retract ._⇒ᴹ_ {t} {u} ih1 ih2 = cong₂ _⇒_ ih1 ih2 ∙ ↓-homo-▶ (↑ t) (↑ u)
+  Retract .*-identityˡᴹ {t} ih = goal
+    where
+      goal : Square
+        (cong (⊤ *_) ih ∙ *-identityˡ _)
+        ih
+        (*-identityˡ t)
+        refl
+      goal = {!   !}
+  Retract .*-identityʳᴹ {t} ih = goal
+    where
+      goal : Square
+          (cong (_* ⊤) ih ∙ ↓-homo-++ (↑ t) [])
+          ih
+          (*-identityʳ t)
+          (cong ↓ᶠ_ (++-identityʳ (↑ t)))
+      goal = {!   !}
+  Retract .*-commᴹ ih1 ih2 = {!   !}
+  Retract .*-assocᴹ ih1 ih2 ih3 = {!   !}
+  Retract .⇒-identityˡᴹ ih = {!   !}
+  Retract .⇒-curryᴹ ih1 ih2 ih3 = {!   !}
+  Retract .⇒-annihilʳᴹ ih = {!   !}
+  Retract .⇒-distribˡᴹ ih1 ih2 ih3 = {!   !}
+
+  ↓↑ : (t : FreeCore A) → t ≡ ↓ᶠ ↑ t
+  ↓↑ = FC.elimSet Retract
 
 
-FreeCoreIsoSForest : Iso (FC.FreeCore A) (ST.SForest A)
-FreeCoreIsoSForest = iso normalise quoteForest sectionForest retract
+FreeCoreIsoSForest : Iso (FreeCore A) (SForest A)
+FreeCoreIsoSForest = iso ↑_ ↓ᶠ_ ↑↓ᶠ (sym ∘ ↓↑)
 
-FreeCore≡SForest : FC.FreeCore A ≡ ST.SForest A
+FreeCore≡SForest : FreeCore A ≡ SForest A
 FreeCore≡SForest = isoToPath FreeCoreIsoSForest
