@@ -99,3 +99,8 @@ open SListProps public using
 
 ▶-annihilʳ : (ts : SForest A) → (ts ▶ []) ≡ []
 ▶-annihilʳ _ = refl
+
+--------------------------------------------------------------------------------
+-- Other properties
+
+open SListProps public using (++-swap)

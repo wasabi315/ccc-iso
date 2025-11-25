@@ -598,3 +598,12 @@ abstract
                       ∙h pasteS refl filler5 filler3 refl filler4
                       ∙h pasteS refl filler7 refl refl filler6)
             in goal))
+
+--------------------------------------------------------------------------------
+-- Other properties
+
+++-swap : (xs ys zs : SList A) → xs ++ ys ++ zs ≡ ys ++ xs ++ zs
+++-swap xs ys zs =
+  sym (++-assoc xs ys zs)
+    ∙∙ cong (_++ zs) (++-comm xs ys)
+    ∙∙ ++-assoc ys xs zs
