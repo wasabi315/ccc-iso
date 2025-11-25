@@ -12,6 +12,7 @@ private
 
 record SymmetricMonoidalGroupoid ℓ : Type (ℓ-suc ℓ) where
   no-eta-equality
+  infixr 6 _*_
   field
     Carrier : Type ℓ
     isGroupoidCarrier : isGroupoid Carrier

@@ -60,7 +60,7 @@ module _ {A : Type ℓ} where
   Readback .[]ᴹ = ⊤
   Readback ._∷ᴹ_ = _*_
   Readback .swapᴹ = *-swap
-  Readback .involᴹ = {!   !}
+  Readback .involᴹ = *-invol
   Readback .ybeᴹ = {!   !}
 
   open ST.Rec Readback public renaming

@@ -111,6 +111,14 @@ Square→doubleCompPath' P =
     ∙∙ sym (Square→compPath P)
     ∙∙ sym (doubleCompPath-elim _ _ _)
 
+symDistr∙∙ : (p : x ≡ y) (q : y ≡ z) (r : z ≡ w) →
+  sym (p ∙∙ q ∙∙ r) ≡ sym r ∙∙ sym q ∙∙ sym p
+symDistr∙∙ p q r =
+  cong sym (doubleCompPath-elim _ _ _)
+    ∙ symDistr (p ∙ q) r
+    ∙ cong (sym r ∙_) (symDistr p q)
+    ∙ sym (doubleCompPath-elim' _ _ _)
+
 uaDoubleCompEquiv : (e : A ≃ B) (f : B ≃ C) (g : C ≃ D) →
   ua (e ∙ₑ f ∙ₑ g) ≡ ua e ∙∙ ua f ∙∙ ua g
 uaDoubleCompEquiv =
@@ -172,6 +180,12 @@ congSquare f P j i = f (P j i)
 
 ∙-extendR' : p ∙ q ≡ r ∙ s → t ∙ (p ∙ q) ≡ t ∙ (r ∙ s)
 ∙-extendR' {t = t} P = cong (t ∙_) P
+
+_⟩∙⟨_ : p ≡ q → r ≡ s → p ∙ r ≡ q ∙ s
+(p ⟩∙⟨ q) i = p i ∙ q i
+
+_⟩∙∙⟨_⟩∙∙⟨_ : p ≡ q → r ≡ s → t ≡ u → (p ∙∙ r ∙∙ t) ≡ (q ∙∙ s ∙∙ u)
+(p ⟩∙∙⟨ q ⟩∙∙⟨ t) i = p i ∙∙ q i ∙∙ t i
 
 --------------------------------------------------------------------------------
 

@@ -1,8 +1,8 @@
-module CartesianClosed.FreeCore.Properties where
+module SymmetricMonoidal.FreeGroupoid.Properties where
 
 open import Cubical.Foundations.Prelude
 
-open import CartesianClosed.FreeCore
+open import SymmetricMonoidal.FreeGroupoid
 
 private
   variable
