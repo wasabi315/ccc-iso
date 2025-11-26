@@ -1,13 +1,13 @@
-module CartesianClosed.SymmetricTree.Properties where
+module CartesianClosedCore.SymmetricTree.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (idfun; _∘_)
 open import Cubical.Foundations.HLevels using (isSetΠ)
 open import Cubical.Data.Unit using (Unit*; tt*)
 
-open import CartesianClosed.SymmetricTree
-import SymmetricMonoidal.SymmetricList as SList
-import SymmetricMonoidal.SymmetricList.Properties as SListProps
+open import CartesianClosedCore.SymmetricTree
+import SymmetricMonoidalGroupoid.SymmetricList as SList
+import SymmetricMonoidalGroupoid.SymmetricList.Properties as SListProps
 
 private
   variable

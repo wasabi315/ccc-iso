@@ -1,4 +1,4 @@
-module CartesianClosed.FreeCore where
+module CartesianClosedCore.Free where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels using
@@ -7,7 +7,7 @@ open import Cubical.Foundations.HLevels using
 open import Cubical.Foundations.Extra using
   (doubleCompPathP; doubleCompPathP≡doubleCompPath; compPathP'≡compPath)
 
-open import SymmetricMonoidal.GroupoidStructure
+open import SymmetricMonoidalGroupoid.Structure
 
 private
   variable
@@ -19,11 +19,11 @@ infixr 6 _*_
 
 --------------------------------------------------------------------------------
 
-data FreeCore (A : Type ℓ) : Type ℓ where
-  ι : (x : A) → FreeCore A
-  ⊤ : FreeCore A
-  _*_ : (t u : FreeCore A) → FreeCore A
-  _⇒_ : (t u : FreeCore A) → FreeCore A
+data Free (A : Type ℓ) : Type ℓ where
+  ι : (x : A) → Free A
+  ⊤ : Free A
+  _*_ : (t u : Free A) → Free A
+  _⇒_ : (t u : Free A) → Free A
 
   *-identityˡ : ∀ t → ⊤ * t ≡ t
   *-identityʳ : ∀ t → t * ⊤ ≡ t
@@ -68,57 +68,57 @@ record MotiveDep (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) whe
   infixr 5 _⇒ᴹ_
   infixr 6 _*ᴹ_
   field
-    FreeCoreᴹ : FreeCore A → Type ℓ′
-    isGroupoidFreeCoreᴹ : ∀ t → isGroupoid (FreeCoreᴹ t)
-    ιᴹ : ∀ x → FreeCoreᴹ (ι x)
-    ⊤ᴹ : FreeCoreᴹ ⊤
-    _*ᴹ_ : ∀ {t u} (tᴹ : FreeCoreᴹ t) (uᴹ : FreeCoreᴹ u) → FreeCoreᴹ (t * u)
-    _⇒ᴹ_ : ∀ {t u} (tᴹ : FreeCoreᴹ t) (uᴹ : FreeCoreᴹ u) → FreeCoreᴹ (t ⇒ u)
+    Freeᴹ : Free A → Type ℓ′
+    isGroupoidFreeᴹ : ∀ t → isGroupoid (Freeᴹ t)
+    ιᴹ : ∀ x → Freeᴹ (ι x)
+    ⊤ᴹ : Freeᴹ ⊤
+    _*ᴹ_ : ∀ {t u} (tᴹ : Freeᴹ t) (uᴹ : Freeᴹ u) → Freeᴹ (t * u)
+    _⇒ᴹ_ : ∀ {t u} (tᴹ : Freeᴹ t) (uᴹ : Freeᴹ u) → Freeᴹ (t ⇒ u)
 
     *-identityˡᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (*-identityˡ t i)) (⊤ᴹ *ᴹ tᴹ) tᴹ
+      PathP (λ i → Freeᴹ (*-identityˡ t i)) (⊤ᴹ *ᴹ tᴹ) tᴹ
     *-identityʳᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (*-identityʳ t i)) (tᴹ *ᴹ ⊤ᴹ) tᴹ
+      PathP (λ i → Freeᴹ (*-identityʳ t i)) (tᴹ *ᴹ ⊤ᴹ) tᴹ
     *-commᴹ : ∀ {t u} tᴹ uᴹ →
-      PathP (λ i → FreeCoreᴹ (*-comm t u i)) (tᴹ *ᴹ uᴹ) (uᴹ *ᴹ tᴹ)
+      PathP (λ i → Freeᴹ (*-comm t u i)) (tᴹ *ᴹ uᴹ) (uᴹ *ᴹ tᴹ)
     *-assocᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      PathP (λ i → FreeCoreᴹ (*-assoc t u v i))
+      PathP (λ i → Freeᴹ (*-assoc t u v i))
         ((tᴹ *ᴹ uᴹ) *ᴹ vᴹ)
         (tᴹ *ᴹ (uᴹ *ᴹ vᴹ))
 
     ⇒-identityˡᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-identityˡ t i)) tᴹ (⊤ᴹ ⇒ᴹ tᴹ)
+      PathP (λ i → Freeᴹ (⇒-identityˡ t i)) tᴹ (⊤ᴹ ⇒ᴹ tᴹ)
     ⇒-curryᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-curry t u v i))
+      PathP (λ i → Freeᴹ (⇒-curry t u v i))
         (tᴹ ⇒ᴹ uᴹ ⇒ᴹ vᴹ)
         (tᴹ *ᴹ uᴹ ⇒ᴹ vᴹ)
     ⇒-annihilʳᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-annihilʳ t i)) (tᴹ ⇒ᴹ ⊤ᴹ) ⊤ᴹ
+      PathP (λ i → Freeᴹ (⇒-annihilʳ t i)) (tᴹ ⇒ᴹ ⊤ᴹ) ⊤ᴹ
     ⇒-distribˡᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-distribˡ t u v i))
+      PathP (λ i → Freeᴹ (⇒-distribˡ t u v i))
         (tᴹ ⇒ᴹ uᴹ *ᴹ vᴹ)
         ((tᴹ ⇒ᴹ uᴹ) *ᴹ (tᴹ ⇒ᴹ vᴹ))
 
     *-bigonᴹ : ∀ {t u} tᴹ uᴹ →
-      SquareP (λ i j → FreeCoreᴹ (*-bigon t u i j))
+      SquareP (λ i j → Freeᴹ (*-bigon t u i j))
         (*-commᴹ tᴹ uᴹ)
         (symP (*-commᴹ uᴹ tᴹ))
         refl
         refl
 
     *-triangleᴹ : ∀ {t u} tᴹ uᴹ →
-      SquareP (λ i j → FreeCoreᴹ (*-triangle t u i j))
+      SquareP (λ i j → Freeᴹ (*-triangle t u i j))
         (*-assocᴹ tᴹ ⊤ᴹ uᴹ)
         (congP (λ _ → _*ᴹ uᴹ) (*-identityʳᴹ tᴹ))
         refl
         (congP (λ _ → tᴹ *ᴹ_) (*-identityˡᴹ uᴹ))
 
     *-pentagonᴹ : ∀ {t u v w} tᴹ uᴹ vᴹ wᴹ →
-      SquareP (λ i j → FreeCoreᴹ (*-pentagon t u v w i j))
-        (compPathP' {B = FreeCoreᴹ}
+      SquareP (λ i j → Freeᴹ (*-pentagon t u v w i j))
+        (compPathP' {B = Freeᴹ}
           (*-assocᴹ (tᴹ *ᴹ uᴹ) vᴹ wᴹ)
           (*-assocᴹ tᴹ uᴹ (vᴹ *ᴹ wᴹ)))
-        (doubleCompPathP {B = FreeCoreᴹ}
+        (doubleCompPathP {B = Freeᴹ}
           (congP (λ _ → _*ᴹ wᴹ) (*-assocᴹ tᴹ uᴹ vᴹ))
           (*-assocᴹ tᴹ (uᴹ *ᴹ vᴹ) wᴹ)
           (congP (λ _ → tᴹ *ᴹ_) (*-assocᴹ uᴹ vᴹ wᴹ)))
@@ -126,12 +126,12 @@ record MotiveDep (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) whe
         refl
 
     *-hexagonᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      SquareP (λ i j → FreeCoreᴹ (*-hexagon t u v i j))
-        (doubleCompPathP {B = FreeCoreᴹ}
+      SquareP (λ i j → Freeᴹ (*-hexagon t u v i j))
+        (doubleCompPathP {B = Freeᴹ}
           (*-assocᴹ tᴹ uᴹ vᴹ)
           (*-commᴹ tᴹ (uᴹ *ᴹ vᴹ))
           (*-assocᴹ uᴹ vᴹ tᴹ))
-        (doubleCompPathP {B = FreeCoreᴹ}
+        (doubleCompPathP {B = Freeᴹ}
           (congP (λ _ → _*ᴹ vᴹ) (*-commᴹ tᴹ uᴹ))
           (*-assocᴹ uᴹ tᴹ vᴹ)
           (congP (λ _ → uᴹ *ᴹ_) (*-commᴹ tᴹ vᴹ)))
@@ -142,7 +142,7 @@ record MotiveDep (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) whe
 module _ (M : MotiveDep A ℓ) where
   open MotiveDep M
 
-  elim : ∀ t → FreeCoreᴹ t
+  elim : ∀ t → Freeᴹ t
   elim (ι x) = ιᴹ x
   elim ⊤ = ⊤ᴹ
   elim (t * u) = elim t *ᴹ elim u
@@ -161,14 +161,14 @@ module _ (M : MotiveDep A ℓ) where
     *-pentagonᴹ (elim t) (elim u) (elim v) (elim w) i j
   elim (*-hexagon t u v i j) = *-hexagonᴹ (elim t) (elim u) (elim v) i j
   elim (trunc t u p q P Q i j k) =
-    isGroupoid→CubeP (λ i j k → FreeCoreᴹ (trunc t u p q P Q i j k))
+    isGroupoid→CubeP (λ i j k → Freeᴹ (trunc t u p q P Q i j k))
       (λ j k → elim (P j k))
       (λ j k → elim (Q j k))
       (λ i k → elim (p k))
       (λ i k → elim (q k))
       (λ i j → elim t)
       (λ i j → elim u)
-      (isGroupoidFreeCoreᴹ u)
+      (isGroupoidFreeᴹ u)
       i j k
 
 
@@ -177,92 +177,92 @@ record MotiveDepSet (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) 
   infixr 5 _⇒ᴹ_
   infixr 6 _*ᴹ_
   field
-    FreeCoreᴹ : FreeCore A → Type ℓ′
-    isSetFreeCoreᴹ : ∀ t → isSet (FreeCoreᴹ t)
-    ιᴹ : ∀ x → FreeCoreᴹ (ι x)
-    ⊤ᴹ : FreeCoreᴹ ⊤
-    _*ᴹ_ : ∀ {t u} (tᴹ : FreeCoreᴹ t) (uᴹ : FreeCoreᴹ u) → FreeCoreᴹ (t * u)
-    _⇒ᴹ_ : ∀ {t u} (tᴹ : FreeCoreᴹ t) (uᴹ : FreeCoreᴹ u) → FreeCoreᴹ (t ⇒ u)
+    Freeᴹ : Free A → Type ℓ′
+    isSetFreeᴹ : ∀ t → isSet (Freeᴹ t)
+    ιᴹ : ∀ x → Freeᴹ (ι x)
+    ⊤ᴹ : Freeᴹ ⊤
+    _*ᴹ_ : ∀ {t u} (tᴹ : Freeᴹ t) (uᴹ : Freeᴹ u) → Freeᴹ (t * u)
+    _⇒ᴹ_ : ∀ {t u} (tᴹ : Freeᴹ t) (uᴹ : Freeᴹ u) → Freeᴹ (t ⇒ u)
 
     *-identityˡᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (*-identityˡ t i)) (⊤ᴹ *ᴹ tᴹ) tᴹ
+      PathP (λ i → Freeᴹ (*-identityˡ t i)) (⊤ᴹ *ᴹ tᴹ) tᴹ
     *-identityʳᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (*-identityʳ t i)) (tᴹ *ᴹ ⊤ᴹ) tᴹ
+      PathP (λ i → Freeᴹ (*-identityʳ t i)) (tᴹ *ᴹ ⊤ᴹ) tᴹ
     *-commᴹ : ∀ {t u} tᴹ uᴹ →
-      PathP (λ i → FreeCoreᴹ (*-comm t u i)) (tᴹ *ᴹ uᴹ) (uᴹ *ᴹ tᴹ)
+      PathP (λ i → Freeᴹ (*-comm t u i)) (tᴹ *ᴹ uᴹ) (uᴹ *ᴹ tᴹ)
     *-assocᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      PathP (λ i → FreeCoreᴹ (*-assoc t u v i))
+      PathP (λ i → Freeᴹ (*-assoc t u v i))
         ((tᴹ *ᴹ uᴹ) *ᴹ vᴹ)
         (tᴹ *ᴹ (uᴹ *ᴹ vᴹ))
 
     ⇒-identityˡᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-identityˡ t i)) tᴹ (⊤ᴹ ⇒ᴹ tᴹ)
+      PathP (λ i → Freeᴹ (⇒-identityˡ t i)) tᴹ (⊤ᴹ ⇒ᴹ tᴹ)
     ⇒-curryᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-curry t u v i))
+      PathP (λ i → Freeᴹ (⇒-curry t u v i))
         (tᴹ ⇒ᴹ uᴹ ⇒ᴹ vᴹ)
         (tᴹ *ᴹ uᴹ ⇒ᴹ vᴹ)
     ⇒-annihilʳᴹ : ∀ {t} tᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-annihilʳ t i)) (tᴹ ⇒ᴹ ⊤ᴹ) ⊤ᴹ
+      PathP (λ i → Freeᴹ (⇒-annihilʳ t i)) (tᴹ ⇒ᴹ ⊤ᴹ) ⊤ᴹ
     ⇒-distribˡᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-      PathP (λ i → FreeCoreᴹ (⇒-distribˡ t u v i))
+      PathP (λ i → Freeᴹ (⇒-distribˡ t u v i))
         (tᴹ ⇒ᴹ uᴹ *ᴹ vᴹ)
         ((tᴹ ⇒ᴹ uᴹ) *ᴹ (tᴹ ⇒ᴹ vᴹ))
 
   *-bigonᴹ : ∀ {t u} tᴹ uᴹ →
-    SquareP (λ i j → FreeCoreᴹ (*-bigon t u i j))
+    SquareP (λ i j → Freeᴹ (*-bigon t u i j))
       (*-commᴹ tᴹ uᴹ)
       (symP (*-commᴹ uᴹ tᴹ))
       refl
       refl
   *-bigonᴹ {t} {u} _ _ =
-    isSet→SquareP (λ i j → isSetFreeCoreᴹ (*-bigon t u i j))
+    isSet→SquareP (λ i j → isSetFreeᴹ (*-bigon t u i j))
       _ _ _ _
 
   *-triangleᴹ : ∀ {t u} tᴹ uᴹ →
-    SquareP (λ i j → FreeCoreᴹ (*-triangle t u i j))
+    SquareP (λ i j → Freeᴹ (*-triangle t u i j))
       (*-assocᴹ tᴹ ⊤ᴹ uᴹ)
       (congP (λ _ → _*ᴹ uᴹ) (*-identityʳᴹ tᴹ))
       refl
       (congP (λ _ → tᴹ *ᴹ_) (*-identityˡᴹ uᴹ))
   *-triangleᴹ {t} {u} _ _ =
-    isSet→SquareP (λ i j → isSetFreeCoreᴹ (*-triangle t u i j))
+    isSet→SquareP (λ i j → isSetFreeᴹ (*-triangle t u i j))
       _ _ _ _
 
   *-pentagonᴹ : ∀ {t u v w} tᴹ uᴹ vᴹ wᴹ →
-    SquareP (λ i j → FreeCoreᴹ (*-pentagon t u v w i j))
-      (compPathP' {B = FreeCoreᴹ}
+    SquareP (λ i j → Freeᴹ (*-pentagon t u v w i j))
+      (compPathP' {B = Freeᴹ}
         (*-assocᴹ (tᴹ *ᴹ uᴹ) vᴹ wᴹ)
         (*-assocᴹ tᴹ uᴹ (vᴹ *ᴹ wᴹ)))
-      (doubleCompPathP {B = FreeCoreᴹ}
+      (doubleCompPathP {B = Freeᴹ}
         (congP (λ _ → _*ᴹ wᴹ) (*-assocᴹ tᴹ uᴹ vᴹ))
         (*-assocᴹ tᴹ (uᴹ *ᴹ vᴹ) wᴹ)
         (congP (λ _ → tᴹ *ᴹ_) (*-assocᴹ uᴹ vᴹ wᴹ)))
       refl
       refl
   *-pentagonᴹ {t} {u} {v} {w} _ _ _ _ =
-    isSet→SquareP (λ i j → isSetFreeCoreᴹ (*-pentagon t u v w i j))
+    isSet→SquareP (λ i j → isSetFreeᴹ (*-pentagon t u v w i j))
       _ _ _ _
 
   *-hexagonᴹ : ∀ {t u v} tᴹ uᴹ vᴹ →
-    SquareP (λ i j → FreeCoreᴹ (*-hexagon t u v i j))
-      (doubleCompPathP {B = FreeCoreᴹ}
+    SquareP (λ i j → Freeᴹ (*-hexagon t u v i j))
+      (doubleCompPathP {B = Freeᴹ}
         (*-assocᴹ tᴹ uᴹ vᴹ)
         (*-commᴹ tᴹ (uᴹ *ᴹ vᴹ))
         (*-assocᴹ uᴹ vᴹ tᴹ))
-      (doubleCompPathP {B = FreeCoreᴹ}
+      (doubleCompPathP {B = Freeᴹ}
         (congP (λ _ → _*ᴹ vᴹ) (*-commᴹ tᴹ uᴹ))
         (*-assocᴹ uᴹ tᴹ vᴹ)
         (congP (λ _ → uᴹ *ᴹ_) (*-commᴹ tᴹ vᴹ)))
       refl
       refl
   *-hexagonᴹ {t} {u} {v} _ _ _ =
-    isSet→SquareP (λ i j → isSetFreeCoreᴹ (*-hexagon t u v i j))
+    isSet→SquareP (λ i j → isSetFreeᴹ (*-hexagon t u v i j))
       _ _ _ _
 
   motiveDep : MotiveDep A ℓ′
   motiveDep = record
-    { FreeCoreᴹ = FreeCoreᴹ
-    ; isGroupoidFreeCoreᴹ = λ t → isSet→isGroupoid (isSetFreeCoreᴹ t)
+    { Freeᴹ = Freeᴹ
+    ; isGroupoidFreeᴹ = λ t → isSet→isGroupoid (isSetFreeᴹ t)
     ; ιᴹ = ιᴹ
     ; ⊤ᴹ = ⊤ᴹ
     ; _*ᴹ_ = _*ᴹ_
@@ -285,7 +285,7 @@ record MotiveDepSet (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) 
 module _ (M : MotiveDepSet A ℓ) where
   open MotiveDepSet M
 
-  elimSet : ∀ t → FreeCoreᴹ t
+  elimSet : ∀ t → Freeᴹ t
   elimSet = elim motiveDep
 
 
@@ -294,12 +294,12 @@ record Motive (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) where
   infixr 5 _⇒ᴹ_
   infixr 6 _*ᴹ_
   field
-    FreeCoreᴹ : Type ℓ′
-    isGroupoidFreeCoreᴹ : isGroupoid FreeCoreᴹ
-    ιᴹ : (x : A) → FreeCoreᴹ
-    ⊤ᴹ : FreeCoreᴹ
-    _*ᴹ_ : (tᴹ uᴹ : FreeCoreᴹ) → FreeCoreᴹ
-    _⇒ᴹ_ : (tᴹ uᴹ : FreeCoreᴹ) → FreeCoreᴹ
+    Freeᴹ : Type ℓ′
+    isGroupoidFreeᴹ : isGroupoid Freeᴹ
+    ιᴹ : (x : A) → Freeᴹ
+    ⊤ᴹ : Freeᴹ
+    _*ᴹ_ : (tᴹ uᴹ : Freeᴹ) → Freeᴹ
+    _⇒ᴹ_ : (tᴹ uᴹ : Freeᴹ) → Freeᴹ
 
     *-identityˡᴹ : ∀ tᴹ → ⊤ᴹ *ᴹ tᴹ ≡ tᴹ
     *-identityʳᴹ : ∀ tᴹ → tᴹ *ᴹ ⊤ᴹ ≡ tᴹ
@@ -340,7 +340,7 @@ record Motive (A : Type ℓ) ℓ′ : Type (ℓ-suc (ℓ-max ℓ ℓ′)) where
 module _ (M : Motive A ℓ) where
   open Motive M
 
-  rec : FreeCore A → FreeCoreᴹ
+  rec : Free A → Freeᴹ
   rec (ι x) = ιᴹ x
   rec ⊤ = ⊤ᴹ
   rec (t * u) = rec t *ᴹ rec u
@@ -366,7 +366,7 @@ module _ (M : Motive A ℓ) where
       ∙∙ sym (doubleCompPathP≡doubleCompPath _ _ _))
     i j
   rec (trunc t u p q P Q i j k) =
-    isGroupoidFreeCoreᴹ
+    isGroupoidFreeᴹ
       (rec t) (rec u)
       (λ i → rec (p i)) (λ i → rec (q i))
       (λ i j → rec (P i j)) (λ i j → rec (Q i j))
@@ -376,7 +376,7 @@ module _ (M : Motive A ℓ) where
 
 symmetricMonoidalGroupoid : (A : Type ℓ) → SymmetricMonoidalGroupoid ℓ
 symmetricMonoidalGroupoid A = record
-  { Carrier = FreeCore A
+  { Carrier = Free A
   ; isGroupoidCarrier = trunc
   ; ⊤ = ⊤
   ; _*_ = _*_

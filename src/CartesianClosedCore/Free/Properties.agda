@@ -1,8 +1,8 @@
-module CartesianClosed.FreeCore.Properties where
+module CartesianClosedCore.Free.Properties where
 
 open import Cubical.Foundations.Prelude
 
-open import CartesianClosed.FreeCore
+open import CartesianClosedCore.Free
 
 private
   variable
@@ -13,4 +13,4 @@ private
 -- Basic properties
 
 module _ {A : Type ℓ} where
-  open import SymmetricMonoidal.GroupoidStructure.Properties (symmetricMonoidalGroupoid A) public
+  open import SymmetricMonoidalGroupoid.Structure.Properties (symmetricMonoidalGroupoid A) public

@@ -1,4 +1,4 @@
-module SymmetricMonoidal.SymmetricList.SetInterpretation where
+module SymmetricMonoidalGroupoid.SymmetricList.SetInterpretation where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels using
@@ -13,7 +13,7 @@ open import Cubical.Reflection.StrictEquiv
 open import Cubical.Foundations.Extra using
   (×-cong-equiv-snd; ua×-cong-equiv-snd; uaDoubleCompEquiv; TypeOfHLevel≡≡)
 
-open import SymmetricMonoidal.SymmetricList
+open import SymmetricMonoidalGroupoid.SymmetricList
 
 private
   variable

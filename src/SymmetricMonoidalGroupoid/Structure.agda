@@ -1,14 +1,8 @@
-module SymmetricMonoidal.GroupoidStructure where
+module SymmetricMonoidalGroupoid.Structure where
 
 open import Cubical.Foundations.Prelude
 
-private
-  variable
-    ℓ : Level
-    A : Type ℓ
-
 --------------------------------------------------------------------------------
--- Groupoid structure
 
 record SymmetricMonoidalGroupoid ℓ : Type (ℓ-suc ℓ) where
   no-eta-equality

@@ -1,4 +1,4 @@
-module CartesianClosed.SymmetricTree.SetTruncation where
+module CartesianClosedCore.SymmetricTree.SetTruncation where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
@@ -14,7 +14,7 @@ open import Cubical.Relation.Nullary using
 open import Cubical.HITs.FiniteMultiset.Properties.Extra using
   (module DiscreteFMSet)
 
-open import CartesianClosed.SymmetricTree
+open import CartesianClosedCore.SymmetricTree
 
 private
   variable

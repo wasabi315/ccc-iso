@@ -1,4 +1,4 @@
-module SymmetricMonoidal.SymmetricList.SetTruncation where
+module SymmetricMonoidalGroupoid.SymmetricList.SetTruncation where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism using (Iso; iso; isoToPath)
@@ -9,7 +9,7 @@ open import Cubical.Relation.Nullary using (Discrete)
 
 open import Cubical.HITs.FiniteMultiset.Properties.Extra using (discreteFMSet)
 
-open import SymmetricMonoidal.SymmetricList
+open import SymmetricMonoidalGroupoid.SymmetricList
 
 open Iso
 

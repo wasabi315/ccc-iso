@@ -1,10 +1,10 @@
-module CartesianClosed.SymmetricTree.SetInterpretation where
+module CartesianClosedCore.SymmetricTree.SetInterpretation where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels using (hSet; isGroupoidHSet; isSet→)
 
-open import CartesianClosed.SymmetricTree
-open import SymmetricMonoidal.SymmetricList.SetInterpretation using
+open import CartesianClosedCore.SymmetricTree
+open import SymmetricMonoidalGroupoid.SymmetricList.SetInterpretation using
   (Unitˢ; _×ˢ_; ×ˢ-swap; ×ˢ-invol; ×ˢ-ybe)
 
 private

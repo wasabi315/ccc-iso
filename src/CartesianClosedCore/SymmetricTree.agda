@@ -1,4 +1,4 @@
-module CartesianClosed.SymmetricTree where
+module CartesianClosedCore.SymmetricTree where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels using
@@ -6,7 +6,8 @@ open import Cubical.Foundations.HLevels using
 
 open import Cubical.Foundations.Extra using
   (doubleCompPathP; doubleCompPathP≡doubleCompPath)
-import SymmetricMonoidal.SymmetricList as SList
+
+import SymmetricMonoidalGroupoid.SymmetricList as SList
 
 private
   variable

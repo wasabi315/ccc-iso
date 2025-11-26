@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
-open import SymmetricMonoidal.GroupoidStructure
+open import SymmetricMonoidalGroupoid.Structure
 
-module SymmetricMonoidal.GroupoidStructure.Properties
+module SymmetricMonoidalGroupoid.Structure.Properties
   {ℓ} (G : SymmetricMonoidalGroupoid ℓ)
   where
 

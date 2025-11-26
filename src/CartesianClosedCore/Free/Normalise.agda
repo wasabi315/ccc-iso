@@ -1,4 +1,4 @@
-module CartesianClosed.FreeCore.Normalise where
+module CartesianClosedCore.Free.Normalise where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_)
@@ -9,11 +9,11 @@ open import Cubical.Foundations.Isomorphism using (Iso; iso; isoToPath)
 
 open import Cubical.Foundations.Extra using (pasteS)
 
-open import CartesianClosed.FreeCore as FC hiding (Motive; MotiveDepSet)
-open import CartesianClosed.FreeCore.Properties
-open import CartesianClosed.SymmetricTree as ST hiding (Motive; MotiveDepSet)
-open import CartesianClosed.SymmetricTree.Properties
-import SymmetricMonoidal.SymmetricList as SList
+open import CartesianClosedCore.Free as FC hiding (Motive; MotiveDepSet)
+open import CartesianClosedCore.Free.Properties
+open import CartesianClosedCore.SymmetricTree as ST hiding (Motive; MotiveDepSet)
+open import CartesianClosedCore.SymmetricTree.Properties
+import SymmetricMonoidalGroupoid.SymmetricList as SList
 
 private
   variable
@@ -26,8 +26,8 @@ module _ {A : Type ℓ} where
   open FC.Motive
 
   Normalise : FC.Motive A ℓ
-  Normalise .FreeCoreᴹ = SForest A
-  Normalise .isGroupoidFreeCoreᴹ = trunc
+  Normalise .Freeᴹ = SForest A
+  Normalise .isGroupoidFreeᴹ = trunc
   Normalise .ιᴹ = ST.ι
   Normalise .⊤ᴹ = []
   Normalise ._*ᴹ_ = _++_
@@ -45,7 +45,7 @@ module _ {A : Type ℓ} where
   Normalise .*-pentagonᴹ = ++-pentagon
   Normalise .*-hexagonᴹ = ++-hexagon
 
-  ↑_ : FreeCore A → SForest A
+  ↑_ : Free A → SForest A
   ↑_ = FC.rec Normalise
 
 
@@ -53,8 +53,8 @@ module _ {A : Type ℓ} where
   open ST.Motive
 
   Readback : ST.Motive A ℓ ℓ
-  Readback .STreeᴹ = FreeCore A
-  Readback .SForestᴹ = FreeCore A
+  Readback .STreeᴹ = Free A
+  Readback .SForestᴹ = Free A
   Readback .isGroupoidSForestᴹ = trunc
   Readback ._▸ᴹ_ t x = t ⇒ FC.ι x
   Readback .[]ᴹ = ⊤
@@ -122,7 +122,7 @@ module _ {A : Type ℓ} where
 
 ↓-homo-► : (ts : SForest A) (t : STree A) → ↓ᶠ ts ⇒ ↓ᵗ t ≡ ↓ᵗ (ts ► t)
 ↓-homo-► ts (us ▸ x) =
-  ⇒-curry _ _ _ ∙ cong (_⇒ FreeCore.ι x) (↓-homo-++ ts us)
+  ⇒-curry _ _ _ ∙ cong (_⇒ Free.ι x) (↓-homo-++ ts us)
 
 ↓-homo-▶ : (ts us : SForest A) → ↓ᶠ ts ⇒ ↓ᶠ us ≡ ↓ᶠ (ts ▶ us)
 ↓-homo-▶ ts =
@@ -135,8 +135,8 @@ module _ {A : Type ℓ} where
   open FC.MotiveDepSet
 
   Retract : FC.MotiveDepSet A ℓ
-  Retract .FreeCoreᴹ t = t ≡ ↓ᶠ ↑ t
-  Retract .isSetFreeCoreᴹ _ = trunc _ _
+  Retract .Freeᴹ t = t ≡ ↓ᶠ ↑ t
+  Retract .isSetFreeᴹ _ = trunc _ _
   Retract .ιᴹ x = ⇒-identityˡ _ ∙ sym (*-identityʳ _)
   Retract .⊤ᴹ = refl
   Retract ._*ᴹ_ {t} {u} ih1 ih2 = cong₂ _*_ ih1 ih2 ∙ ↓-homo-++ (↑ t) (↑ u)
@@ -164,12 +164,12 @@ module _ {A : Type ℓ} where
   Retract .⇒-annihilʳᴹ ih = {!   !}
   Retract .⇒-distribˡᴹ ih1 ih2 ih3 = {!   !}
 
-  ↓↑ : (t : FreeCore A) → t ≡ ↓ᶠ ↑ t
+  ↓↑ : (t : Free A) → t ≡ ↓ᶠ ↑ t
   ↓↑ = FC.elimSet Retract
 
 
-FreeCoreIsoSForest : Iso (FreeCore A) (SForest A)
-FreeCoreIsoSForest = iso ↑_ ↓ᶠ_ ↑↓ᶠ (sym ∘ ↓↑)
+FreeIsoSForest : Iso (Free A) (SForest A)
+FreeIsoSForest = iso ↑_ ↓ᶠ_ ↑↓ᶠ (sym ∘ ↓↑)
 
-FreeCore≡SForest : FreeCore A ≡ SForest A
-FreeCore≡SForest = isoToPath FreeCoreIsoSForest
+Free≡SForest : Free A ≡ SForest A
+Free≡SForest = isoToPath FreeIsoSForest

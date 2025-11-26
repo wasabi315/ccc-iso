@@ -1,4 +1,4 @@
-module SymmetricMonoidal.SymmetricList where
+module SymmetricMonoidalGroupoid.SymmetricList where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels using

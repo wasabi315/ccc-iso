@@ -1,4 +1,4 @@
-module SymmetricMonoidal.SymmetricList.Properties where
+module SymmetricMonoidalGroupoid.SymmetricList.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function using (_∘_; idfun)
@@ -22,8 +22,8 @@ open import Cubical.Foundations.Extra using
   (doubleCompPaths→Square; doubleCompPaths→Square'; Square→doubleCompPath';
     paste; pasteS; _∙h_; _∙v_; congSquare; ∙-extendL; ∙-extendR')
 
-open import SymmetricMonoidal.GroupoidStructure
-open import SymmetricMonoidal.SymmetricList
+open import SymmetricMonoidalGroupoid.Structure
+open import SymmetricMonoidalGroupoid.SymmetricList
 
 private
   variable
